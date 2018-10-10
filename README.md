@@ -1,2 +1,2 @@
 # gomember
-A go client for amember 
+go client for aMember platform
