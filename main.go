@@ -16,6 +16,6 @@ func main() {
 	}
 	//am.Users(p)
 	//am.Invoices(p)
-	//am.Accesses(p)
-	am.Payments(p)
+	am.Accesses(p)
+	//am.Payments(p)
 }
