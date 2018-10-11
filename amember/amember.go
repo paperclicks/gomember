@@ -155,7 +155,7 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 	return invoices
 }
 
-func (am *Amember) Accesses(p Params) map[int]Access {
+func (am *Amember) Accesses(p Params, activeOnly bool) map[int]Access {
 
 	start := time.Now()
 
@@ -164,6 +164,9 @@ func (am *Amember) Accesses(p Params) map[int]Access {
 	page := 0
 	count := 100
 	params := am.parseParams(p)
+
+	t := time.Now()
+	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 	//reange over all the pages
 	for {
@@ -193,6 +196,13 @@ func (am *Amember) Accesses(p Params) map[int]Access {
 			i := Access{}
 			//try to parse the map into the struct fields
 			am.mapToStruct(m, &i)
+
+			expires := time.Date(i.ExpireDate.Time.Year(), i.ExpireDate.Time.Month(), i.ExpireDate.Time.Day(), 0, 0, 0, 0, i.ExpireDate.Time.Location())
+
+			//skip any expired acces if we are requesting only active ones
+			if expires.Before(today) && activeOnly {
+				continue
+			}
 
 			accesses[i.AccessID] = i
 		}
@@ -310,6 +320,10 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			am.Gologger.Error("Key [%s] not found in map %#v", jsonTag, m)
 		}
 
+		if jsonTag == "added" {
+
+		}
+
 		//check inf the underlaying value of interface{} is nil.
 		//In this case the value will be ignored and the struct will have the zero value for that field
 		if val == nil {
@@ -317,7 +331,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 		}
 
 		//switch on the type of the i-th struct field, and perform the right conversion
-		switch f.Interface().(type) {
+		switch t := f.Interface().(type) {
 
 		case string:
 			f.SetString(val.(string))
@@ -381,12 +395,13 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			ct := CustomTime{}
 			err := ct.UnmarshalJSON([]byte(val.(string)))
 			if err != nil {
-				break
-				//panic(err)
+
+				panic(err)
 			}
 			f.Set(reflect.ValueOf(ct))
 		default:
-
+			am.Gologger.Error("Type not found: %v", t)
+			panic(fmt.Sprintf("Type not found: %v", t))
 		}
 	}
 }

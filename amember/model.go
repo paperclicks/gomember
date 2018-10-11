@@ -1,12 +1,13 @@
 package amember
 
 import (
+	"regexp"
 	"strings"
 	"time"
 )
 
 type User struct {
-	Added              *CustomTime `json:"added"`
+	Added              CustomTime  `json:"added"`
 	AffAdded           interface{} `json:"aff_added"`
 	AffCustomRedirect  int         `json:"aff_custom_redirect"`
 	AffID              interface{} `json:"aff_id"`
@@ -14,7 +15,7 @@ type User struct {
 	City               string      `json:"city"`
 	Comment            string      `json:"comment"`
 	Country            string      `json:"country"`
-	DisableLockUntil   *CustomTime `json:"disable_lock_until"`
+	DisableLockUntil   CustomTime  `json:"disable_lock_until"`
 	Email              string      `json:"email"`
 	IAgree             int         `json:"i_agree"`
 	IsAffiliate        int         `json:"is_affiliate"`
@@ -22,7 +23,7 @@ type User struct {
 	IsLocked           int         `json:"is_locked"`
 	Lang               string      `json:"lang"`
 	LastIP             string      `json:"last_ip"`
-	LastLogin          *CustomTime `json:"last_login"`
+	LastLogin          CustomTime  `json:"last_login"`
 	LastSession        string      `json:"last_session"`
 	LastUserAgent      string      `json:"last_user_agent"`
 	Login              string      `json:"login"`
@@ -30,7 +31,7 @@ type User struct {
 	NameL              string      `json:"name_l"`
 	NeedSessionRefresh int         `json:"need_session_refresh"`
 	Pass               string      `json:"pass"`
-	PassDattm          *CustomTime `json:"pass_dattm"`
+	PassDattm          CustomTime  `json:"pass_dattm"`
 	Phone              string      `json:"phone"`
 	RememberKey        string      `json:"remember_key"`
 	RemoteAddr         string      `json:"remote_addr"`
@@ -95,18 +96,18 @@ type Invoice struct {
 }
 
 type Access struct {
-	AccessID         int         `json:"access_id"`
-	InvoiceID        int         `json:"invoice_id"`
-	InvoicePublicID  string      `json:"invoice_public_id"`
-	InvoicePaymentID int         `json:"invoice_payment_id"`
-	InvoiceItemID    int         `json:"invoice_item_id"`
-	UserID           int         `json:"user_id"`
-	ProductID        int         `json:"product_id"`
-	TransactionID    string      `json:"transaction_id"`
-	BeginDate        *CustomTime `json:"begin_date"`
-	ExpireDate       *CustomTime `json:"expire_date"`
-	Qty              int         `json:"qty"`
-	Comment          string      `json:"comment"`
+	AccessID         int        `json:"access_id"`
+	InvoiceID        int        `json:"invoice_id"`
+	InvoicePublicID  string     `json:"invoice_public_id"`
+	InvoicePaymentID int        `json:"invoice_payment_id"`
+	InvoiceItemID    int        `json:"invoice_item_id"`
+	UserID           int        `json:"user_id"`
+	ProductID        int        `json:"product_id"`
+	TransactionID    string     `json:"transaction_id"`
+	BeginDate        CustomTime `json:"begin_date"`
+	ExpireDate       CustomTime `json:"expire_date"`
+	Qty              int        `json:"qty"`
+	Comment          string     `json:"comment"`
 }
 
 type Payment struct {
@@ -140,17 +141,34 @@ type CustomTime struct {
 }
 
 const amemberDateLayout = "2006-01-02 15:04:05"
+const amemberDateLayout2 = "2006-01-02"
 
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 
 	//remove any extra " from the date string
 	s := strings.Trim(string(b), "\"")
 
-	t, err := time.Parse(amemberDateLayout, s)
+	regex := regexp.MustCompile("[0-9]")
+	mask := regex.ReplaceAllString(s, "x")
 
-	ct.Time = t
+	//try to parse from different formats
+	switch mask {
+	case "xxxx-xx-xx xx:xx:xx":
+		t, err := time.Parse(amemberDateLayout, s)
+		if err != nil {
+			return err
+		}
+		ct.Time = t
+	case "xxxx-xx-xx":
+		t, err := time.Parse(amemberDateLayout2, s)
+		if err != nil {
+			return err
+		}
+		ct.Time = t
 
-	return err
+	}
+
+	return nil
 }
 
 func (ct *CustomTime) MarshalJSON() ([]byte, error) {
