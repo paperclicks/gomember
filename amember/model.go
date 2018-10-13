@@ -140,8 +140,10 @@ type CustomTime struct {
 	time.Time
 }
 
-const amemberDateLayout = "2006-01-02 15:04:05"
-const amemberDateLayout2 = "2006-01-02"
+type Membership struct {
+	User     User     `json:"user`
+	Accesses []Access `json:"accesses"`
+}
 
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 
@@ -154,13 +156,13 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	//try to parse from different formats
 	switch mask {
 	case "xxxx-xx-xx xx:xx:xx":
-		t, err := time.Parse(amemberDateLayout, s)
+		t, err := time.Parse("2006-01-02 15:04:05", s)
 		if err != nil {
 			return err
 		}
 		ct.Time = t
 	case "xxxx-xx-xx":
-		t, err := time.Parse(amemberDateLayout2, s)
+		t, err := time.Parse("2006-01-02", s)
 		if err != nil {
 			return err
 		}
@@ -173,5 +175,5 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 
 func (ct *CustomTime) MarshalJSON() ([]byte, error) {
 
-	return []byte(ct.Time.Format(amemberDateLayout)), nil
+	return []byte(ct.Time.Format("2006-01-02 15:04:05")), nil
 }

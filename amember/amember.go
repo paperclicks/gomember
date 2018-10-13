@@ -43,6 +43,7 @@ func New(apiURL string, apiKey string, output io.Writer) *Amember {
 	return &Amember{APIURL: apiURL, APIKey: apiKey, Gologger: gologger, client: cli}
 }
 
+//Users returns a map of User having username as key
 func (am *Amember) Users(p Params) map[string]User {
 
 	start := time.Now()
@@ -92,7 +93,6 @@ func (am *Amember) Users(p Params) map[string]User {
 		page++
 
 	}
-	fmt.Printf("%#v", users)
 
 	am.Gologger.Info("Returned [%d] users in [%f] seconds", len(users), time.Since(start).Seconds())
 
@@ -155,11 +155,12 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 	return invoices
 }
 
-func (am *Amember) Accesses(p Params, activeOnly bool) map[int]Access {
+//Accesses returns a map of Access slices. The map has user_id as key
+func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	start := time.Now()
 
-	accesses := make(map[int]Access)
+	accesses := make(map[int][]Access)
 
 	page := 0
 	count := 100
@@ -204,7 +205,7 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int]Access {
 				continue
 			}
 
-			accesses[i.AccessID] = i
+			accesses[i.UserID] = append(accesses[i.UserID], i)
 		}
 
 		if len(response) < count+1 {
@@ -214,8 +215,6 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int]Access {
 		page++
 
 	}
-
-	fmt.Printf("%#v", accesses)
 
 	am.Gologger.Info("Returned [%d] accesses in [%f] seconds", len(accesses), time.Since(start).Seconds())
 
@@ -277,6 +276,7 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 
 	return payments
 }
+
 func (am *Amember) doGet(url string) (map[string]interface{}, error) {
 
 	response := make(map[string]interface{})
@@ -400,8 +400,8 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			}
 			f.Set(reflect.ValueOf(ct))
 		default:
-			am.Gologger.Error("Type not found: %v", t)
-			panic(fmt.Sprintf("Type not found: %v", t))
+			am.Gologger.Error("Type for field [%s] not found: %v", jsonTag, t)
+			//panic(fmt.Sprintf("Type not found: %v", t))
 		}
 	}
 }
@@ -423,4 +423,157 @@ func (am *Amember) parseParams(p Params) string {
 	}
 
 	return qs
+}
+
+func (am *Amember) Memberships(p Params) map[string]Membership {
+
+	start := time.Now()
+	memberships := make(map[string]Membership)
+
+	page := 0
+	count := 100
+	params := am.parseParams(p)
+
+	//reange over all the pages
+	for {
+
+		//add page param the url
+		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
+
+		am.Gologger.Debug("URL: %s", url)
+
+		response, err := am.doGet(url)
+		if err != nil {
+			am.Gologger.Error("doGet error: %v", err)
+			return memberships
+		}
+
+		//fmt.Printf("%#v", response)
+
+		//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
+		for k, v := range response {
+
+			membership := Membership{}
+
+			if k == "_total" {
+				continue
+			}
+
+			uMap := v.(map[string]interface{})
+
+			u := User{}
+			//parse user data and add to the current membership
+			am.mapToStruct(uMap, &u)
+			membership.User = u
+
+			nMap := uMap["nested"].(map[string]interface{})
+			aMap := nMap["access"].([]interface{})
+
+			//parse all access data for current user and add to the current membership
+			accesses := []Access{}
+			for _, a := range aMap {
+				m := a.(map[string]interface{})
+				access := Access{}
+
+				am.mapToStruct(m, &access)
+
+				//add only if access is valid (not expired)
+				if validAccess(access) {
+					accesses = append(accesses, access)
+				}
+
+			}
+
+			membership.Accesses = accesses
+
+			memberships[membership.User.Login] = membership
+
+		}
+
+		if len(response) < count+1 {
+			break
+		}
+
+		page++
+
+	}
+
+	am.Gologger.Info("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds())
+
+	return memberships
+}
+
+func (am *Amember) ProductCategories() map[int]map[int]int {
+
+	start := time.Now()
+
+	pc := make(map[int]map[int]int)
+
+	//add page param the url
+	url := fmt.Sprintf("%s/api/product-product-category?_key=%s", am.APIURL, am.APIKey)
+
+	am.Gologger.Debug("URL: %s", url)
+
+	response, err := am.doGet(url)
+	if err != nil {
+		am.Gologger.Error("doGet error: %v", err)
+		return pc
+	}
+
+	//fmt.Printf("%#v", response)
+
+	//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
+	for k, v := range response {
+
+		if k == "_total" {
+			continue
+		}
+
+		prod := v.([]interface{})
+
+		cid, err := strconv.Atoi(k)
+		if err != nil {
+			am.Gologger.Debug("strconv error converting category id [%s] to int: %v", k, err)
+			break
+		}
+
+		//range over the slice of product ids and build the final response
+		for _, pi := range prod {
+
+			id, err := strconv.Atoi(pi.(string))
+			if err != nil {
+				am.Gologger.Debug("strconv error converting product id [%s]: %v", pi.(string), err)
+				break
+			}
+
+			//if categories map is nil, first initialize the map
+			if pc[id] == nil {
+
+				pc[id] = make(map[int]int)
+			}
+
+			pc[id][cid] = cid
+
+		}
+
+	}
+
+	fmt.Printf("%#v", pc)
+
+	am.Gologger.Info("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds())
+
+	return pc
+}
+func validAccess(a Access) bool {
+	t := time.Now()
+	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
+	expires := time.Date(a.ExpireDate.Time.Year(), a.ExpireDate.Time.Month(), a.ExpireDate.Time.Day(), 0, 0, 0, 0, a.ExpireDate.Time.Location())
+
+	//skip any expired acces if we are requesting only active ones
+	if expires.Before(today) {
+		return false
+	}
+
+	return true
 }
