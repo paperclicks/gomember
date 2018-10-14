@@ -425,7 +425,9 @@ func (am *Amember) parseParams(p Params) string {
 	return qs
 }
 
-func (am *Amember) Memberships(p Params) map[string]Membership {
+//Memberships return a map of Membership having username as key.
+//If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
+func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membership {
 
 	start := time.Now()
 	memberships := make(map[string]Membership)
@@ -478,9 +480,13 @@ func (am *Amember) Memberships(p Params) map[string]Membership {
 				am.mapToStruct(m, &access)
 
 				//add only if access is valid (not expired)
-				if validAccess(access) {
+				if activeAccessOnly && validAccess(access) {
 					accesses = append(accesses, access)
+					continue
 				}
+
+				//otherwise add all accesses
+				accesses = append(accesses, access)
 
 			}
 
