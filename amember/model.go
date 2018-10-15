@@ -132,6 +132,43 @@ type Payment struct {
 	DisplayInvoiceID    string      `json:"display_invoice_id"`
 }
 
+type Product struct {
+	CartDescription      string     `json:"cart_description"`
+	Comment              string     `json:"comment"`
+	Currency             string     `json:"currency"`
+	DefaultBillingPlanID int        `json:"default_billing_plan_id"`
+	Description          string     `json:"description"`
+	Img                  int        `json:"img"`
+	ImgCartPath          string     `json:"img_cart_path"`
+	ImgDetailPath        string     `json:"img_detail_path"`
+	ImgOrigPath          string     `json:"img_orig_path"`
+	ImgPath              string     `json:"img_path"`
+	IsArchived           int        `json:"is_archived"`
+	IsDisabled           int        `json:"is_disabled"`
+	IsTangible           int        `json:"is_tangible"`
+	MetaDescription      string     `json:"meta_description"`
+	MetaKeywords         string     `json:"meta_keywords"`
+	MetaRobots           string     `json:"meta_robots"`
+	MetaTitle            string     `json:"meta_title"`
+	Path                 string     `json:"path"`
+	PaysysID             string     `json:"paysys_id"`
+	PreventIfOther       string     `json:"prevent_if_other"`
+	ProductID            int        `json:"product_id"`
+	RenewalGroup         string     `json:"renewal_group"`
+	RequireOther         string     `json:"require_other"`
+	SortOrder            int        `json:"sort_order"`
+	StartDate            CustomTime `json:"start_date"`
+	StartDateFixed       CustomTime `json:"start_date_fixed"`
+	Tags                 string     `json:"tags"`
+	TaxDigital           string     `json:"tax_digital"`
+	TaxGroup             string     `json:"tax_group"`
+	TaxRateGroup         string     `json:"tax_rate_group"`
+	ThanksRedirectURL    string     `json:"thanks_redirect_url"`
+	Title                string     `json:"title"`
+	TrialGroup           string     `json:"trial_group"`
+	URL                  string     `json:"url"`
+}
+
 type APIResponseUser struct {
 	Users map[int]User
 }

@@ -277,6 +277,209 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 	return payments
 }
 
+//Memberships return a map of Membership having username as key.
+//If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
+func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membership {
+
+	start := time.Now()
+	memberships := make(map[string]Membership)
+
+	page := 0
+	count := 100
+	params := am.parseParams(p)
+
+	//reange over all the pages
+	for {
+
+		//add page param the url
+		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
+
+		am.Gologger.Debug("URL: %s", url)
+
+		response, err := am.doGet(url)
+		if err != nil {
+			am.Gologger.Error("doGet error: %v", err)
+			return memberships
+		}
+
+		//fmt.Printf("%#v", response)
+
+		//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
+		for k, v := range response {
+
+			membership := Membership{}
+
+			if k == "_total" {
+				continue
+			}
+
+			uMap := v.(map[string]interface{})
+
+			u := User{}
+			//parse user data and add to the current membership
+			am.mapToStruct(uMap, &u)
+			membership.User = u
+
+			nMap := uMap["nested"].(map[string]interface{})
+			aMap := nMap["access"].([]interface{})
+
+			//parse all access data for current user and add to the current membership
+			accesses := []Access{}
+			for _, a := range aMap {
+				m := a.(map[string]interface{})
+				access := Access{}
+
+				am.mapToStruct(m, &access)
+
+				//add only if access is valid (not expired)
+				if activeAccessOnly && validAccess(access) {
+					accesses = append(accesses, access)
+					continue
+				}
+
+				//otherwise add all accesses
+				accesses = append(accesses, access)
+
+			}
+
+			membership.Accesses = accesses
+
+			memberships[membership.User.Login] = membership
+
+		}
+
+		if len(response) < count+1 {
+			break
+		}
+
+		page++
+
+	}
+
+	am.Gologger.Info("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds())
+
+	return memberships
+}
+
+//ProductCategories returns a map of products having product id as key, and the corresponding map of categories as value
+func (am *Amember) ProductCategories() map[int]map[int]int {
+
+	start := time.Now()
+
+	pc := make(map[int]map[int]int)
+
+	//add page param the url
+	url := fmt.Sprintf("%s/api/product-product-category?_key=%s", am.APIURL, am.APIKey)
+
+	am.Gologger.Debug("URL: %s", url)
+
+	response, err := am.doGet(url)
+	if err != nil {
+		am.Gologger.Error("doGet error: %v", err)
+		return pc
+	}
+
+	//fmt.Printf("%#v", response)
+
+	//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
+	for k, v := range response {
+
+		if k == "_total" {
+			continue
+		}
+
+		prod := v.([]interface{})
+
+		cid, err := strconv.Atoi(k)
+		if err != nil {
+			am.Gologger.Debug("strconv error converting category id [%s] to int: %v", k, err)
+			break
+		}
+
+		//range over the slice of product ids and build the final response
+		for _, pi := range prod {
+
+			id, err := strconv.Atoi(pi.(string))
+			if err != nil {
+				am.Gologger.Debug("strconv error converting product id [%s]: %v", pi.(string), err)
+				break
+			}
+
+			//if categories map is nil, first initialize the map
+			if pc[id] == nil {
+
+				pc[id] = make(map[int]int)
+			}
+
+			pc[id][cid] = cid
+
+		}
+
+	}
+
+	fmt.Printf("%#v", pc)
+
+	am.Gologger.Info("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds())
+
+	return pc
+}
+
+func (am *Amember) Products(p Params) map[int]Product {
+	start := time.Now()
+
+	products := make(map[int]Product)
+
+	page := 0
+	count := 100
+	params := am.parseParams(p)
+
+	//reange over all the pages
+	for {
+
+		//add page param the url
+		url := fmt.Sprintf("%s/api/products?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
+
+		am.Gologger.Debug("URL: %s", url)
+
+		response, err := am.doGet(url)
+		if err != nil {
+			am.Gologger.Error("doGet error: %v", err)
+			return products
+		}
+
+		//fmt.Printf("%#v", response)
+
+		//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
+		for k, v := range response {
+
+			if k == "_total" {
+				continue
+			}
+
+			m := v.(map[string]interface{})
+
+			i := Product{}
+			//try to parse the map into the struct fields
+			am.mapToStruct(m, &i)
+
+			products[i.ProductID] = i
+		}
+
+		if len(response) < count+1 {
+			break
+		}
+
+		page++
+
+	}
+
+	fmt.Printf("%#v", products)
+
+	am.Gologger.Info("Returned [%d] products in [%f] seconds", len(products), time.Since(start).Seconds())
+
+	return products
+}
+
 func (am *Amember) doGet(url string) (map[string]interface{}, error) {
 
 	response := make(map[string]interface{})
@@ -425,151 +628,6 @@ func (am *Amember) parseParams(p Params) string {
 	return qs
 }
 
-//Memberships return a map of Membership having username as key.
-//If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
-func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membership {
-
-	start := time.Now()
-	memberships := make(map[string]Membership)
-
-	page := 0
-	count := 100
-	params := am.parseParams(p)
-
-	//reange over all the pages
-	for {
-
-		//add page param the url
-		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
-
-		am.Gologger.Debug("URL: %s", url)
-
-		response, err := am.doGet(url)
-		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
-			return memberships
-		}
-
-		//fmt.Printf("%#v", response)
-
-		//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
-		for k, v := range response {
-
-			membership := Membership{}
-
-			if k == "_total" {
-				continue
-			}
-
-			uMap := v.(map[string]interface{})
-
-			u := User{}
-			//parse user data and add to the current membership
-			am.mapToStruct(uMap, &u)
-			membership.User = u
-
-			nMap := uMap["nested"].(map[string]interface{})
-			aMap := nMap["access"].([]interface{})
-
-			//parse all access data for current user and add to the current membership
-			accesses := []Access{}
-			for _, a := range aMap {
-				m := a.(map[string]interface{})
-				access := Access{}
-
-				am.mapToStruct(m, &access)
-
-				//add only if access is valid (not expired)
-				if activeAccessOnly && validAccess(access) {
-					accesses = append(accesses, access)
-					continue
-				}
-
-				//otherwise add all accesses
-				accesses = append(accesses, access)
-
-			}
-
-			membership.Accesses = accesses
-
-			memberships[membership.User.Login] = membership
-
-		}
-
-		if len(response) < count+1 {
-			break
-		}
-
-		page++
-
-	}
-
-	am.Gologger.Info("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds())
-
-	return memberships
-}
-
-func (am *Amember) ProductCategories() map[int]map[int]int {
-
-	start := time.Now()
-
-	pc := make(map[int]map[int]int)
-
-	//add page param the url
-	url := fmt.Sprintf("%s/api/product-product-category?_key=%s", am.APIURL, am.APIKey)
-
-	am.Gologger.Debug("URL: %s", url)
-
-	response, err := am.doGet(url)
-	if err != nil {
-		am.Gologger.Error("doGet error: %v", err)
-		return pc
-	}
-
-	//fmt.Printf("%#v", response)
-
-	//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
-	for k, v := range response {
-
-		if k == "_total" {
-			continue
-		}
-
-		prod := v.([]interface{})
-
-		cid, err := strconv.Atoi(k)
-		if err != nil {
-			am.Gologger.Debug("strconv error converting category id [%s] to int: %v", k, err)
-			break
-		}
-
-		//range over the slice of product ids and build the final response
-		for _, pi := range prod {
-
-			id, err := strconv.Atoi(pi.(string))
-			if err != nil {
-				am.Gologger.Debug("strconv error converting product id [%s]: %v", pi.(string), err)
-				break
-			}
-
-			//if categories map is nil, first initialize the map
-			if pc[id] == nil {
-
-				pc[id] = make(map[int]int)
-			}
-
-			pc[id][cid] = cid
-
-		}
-
-	}
-
-	fmt.Printf("%#v", pc)
-
-	am.Gologger.Info("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds())
-
-	return pc
-}
 func validAccess(a Access) bool {
 	t := time.Now()
 	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
