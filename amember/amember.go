@@ -416,9 +416,6 @@ func (am *Amember) ProductCategories() map[int]map[int]int {
 		}
 
 	}
-
-	fmt.Printf("%#v", pc)
-
 	am.Gologger.Info("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds())
 
 	return pc
@@ -548,7 +545,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 				v, err := strconv.Atoi(val.(string))
 				if err != nil {
-					am.Gologger.Debug("strconv error for field [%s]: %v", jsonTag, err)
+					am.Gologger.Error("strconv error for field [%s]: %v", jsonTag, err)
 					break
 				}
 				f.SetInt(int64(v))
@@ -556,28 +553,28 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			case reflect.Int:
 
 				if _, ok := val.(int); !ok {
-					am.Gologger.Debug("assertion to int failed for field [%s]: %v", jsonTag, val)
+					am.Gologger.Error("assertion to int failed for field [%s]: %v", jsonTag, val)
 					break
 				}
 				f.SetInt(int64(val.(int)))
 
 			case reflect.Int32:
 				if _, ok := val.(int32); !ok {
-					am.Gologger.Debug("assertion to int32 failed: %v", val)
+					am.Gologger.Error("assertion to int32 failed: %v", val)
 					break
 				}
 				f.SetInt(int64(val.(int32)))
 
 			case reflect.Int64:
 				if _, ok := val.(int64); !ok {
-					am.Gologger.Debug("assertion to int64 failed: %v", val)
+					am.Gologger.Error("assertion to int64 failed: %v", val)
 					break
 				}
 				f.SetInt(int64(val.(int64)))
 
 			case reflect.Float64:
 				if _, ok := val.(float64); !ok {
-					am.Gologger.Debug("assertion to float64 failed: %v", val)
+					am.Gologger.Error("assertion to float64 failed: %v", val)
 					break
 				}
 
@@ -598,13 +595,13 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			ct := CustomTime{}
 			err := ct.UnmarshalJSON([]byte(val.(string)))
 			if err != nil {
-
-				panic(err)
+				am.Gologger.Error("Error parsing date string %s - %v", val.(string), err)
+				break
 			}
 			f.Set(reflect.ValueOf(ct))
 		default:
 			am.Gologger.Error("Type for field [%s] not found: %v", jsonTag, t)
-			//panic(fmt.Sprintf("Type not found: %v", t))
+
 		}
 	}
 }
