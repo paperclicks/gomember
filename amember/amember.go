@@ -470,8 +470,6 @@ func (am *Amember) Products(p Params) map[int]Product {
 
 	}
 
-	fmt.Printf("%#v", products)
-
 	am.Gologger.Info("Returned [%d] products in [%f] seconds", len(products), time.Since(start).Seconds())
 
 	return products
