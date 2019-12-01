@@ -2,8 +2,8 @@ package amember
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"reflect"
@@ -25,9 +25,7 @@ type Params struct {
 	Nested []string
 }
 
-func New(apiURL string, apiKey string, output io.Writer) *Amember {
-	gologger := golog.New(output)
-	gologger.ShowCallerInfo = true
+func New(apiURL string, apiKey string, gl *golog.Golog) *Amember {
 
 	//create a custom timout dialer
 	dialer := &net.Dialer{Timeout: 30 * time.Second}
@@ -40,7 +38,7 @@ func New(apiURL string, apiKey string, output io.Writer) *Amember {
 
 	cli := &http.Client{Transport: tr}
 
-	return &Amember{APIURL: apiURL, APIKey: apiKey, Gologger: gologger, client: cli}
+	return &Amember{APIURL: apiURL, APIKey: apiKey, Gologger: gl, client: cli}
 }
 
 //Users returns a map of User having username as key
@@ -60,11 +58,9 @@ func (am *Amember) Users(p Params) map[string]User {
 		//add page param the url
 		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
 
-		am.Gologger.Debug("URL: %s", url)
-
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return users
 		}
 
@@ -94,7 +90,7 @@ func (am *Amember) Users(p Params) map[string]User {
 
 	}
 
-	am.Gologger.Info("Returned [%d] users in [%f] seconds", len(users), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] users in [%f] seconds", len(users), time.Since(start).Seconds()), golog.DEBUG)
 
 	return users
 }
@@ -114,11 +110,9 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 		//add page param the url
 		url := fmt.Sprintf("%s/api/invoices?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
 
-		am.Gologger.Debug("URL: %s", url)
-
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return invoices
 		}
 
@@ -148,9 +142,7 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	}
 
-	fmt.Printf("%#v", invoices)
-
-	am.Gologger.Info("Returned [%d] invoices in [%f] seconds", len(invoices), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] invoices in [%f] seconds", len(invoices), time.Since(start).Seconds()), golog.DEBUG)
 
 	return invoices
 }
@@ -175,11 +167,11 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 		//add page param the url
 		url := fmt.Sprintf("%s/api/access?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
 
-		am.Gologger.Debug("URL: %s", url)
+		am.Gologger.Log(fmt.Sprintf("GET: %s", url), golog.DEBUG)
 
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return accesses
 		}
 
@@ -216,7 +208,7 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	}
 
-	am.Gologger.Info("Returned [%d] accesses in [%f] seconds", len(accesses), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] accesses in [%f] seconds", len(accesses), time.Since(start).Seconds()), golog.DEBUG)
 
 	return accesses
 }
@@ -236,11 +228,9 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 		//add page param the url
 		url := fmt.Sprintf("%s/api/invoice-payments?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
 
-		am.Gologger.Debug("URL: %s", url)
-
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return payments
 		}
 
@@ -270,9 +260,7 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 
 	}
 
-	fmt.Printf("%#v", payments)
-
-	am.Gologger.Info("Returned [%d] payments in [%f] seconds", len(payments), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] payments in [%f] seconds", len(payments), time.Since(start).Seconds()), golog.DEBUG)
 
 	return payments
 }
@@ -294,11 +282,9 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 		//add page param the url
 		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
 
-		am.Gologger.Debug("URL: %s", url)
-
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return memberships
 		}
 
@@ -362,7 +348,7 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 
 	}
 
-	am.Gologger.Info("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds()), golog.DEBUG)
 
 	return memberships
 }
@@ -377,11 +363,9 @@ func (am *Amember) ProductCategories() map[int]map[int]int {
 	//add page param the url
 	url := fmt.Sprintf("%s/api/product-product-category?_key=%s", am.APIURL, am.APIKey)
 
-	am.Gologger.Debug("URL: %s", url)
-
 	response, err := am.doGet(url)
 	if err != nil {
-		am.Gologger.Error("doGet error: %v", err)
+		am.Gologger.Log(err, golog.ERROR)
 		return pc
 	}
 
@@ -398,8 +382,7 @@ func (am *Amember) ProductCategories() map[int]map[int]int {
 
 		cid, err := strconv.Atoi(k)
 		if err != nil {
-			am.Gologger.Debug("strconv error converting category id [%s] to int: %v", k, err)
-			break
+			panic(err)
 		}
 
 		//range over the slice of product ids and build the final response
@@ -407,8 +390,8 @@ func (am *Amember) ProductCategories() map[int]map[int]int {
 
 			id, err := strconv.Atoi(pi.(string))
 			if err != nil {
-				am.Gologger.Debug("strconv error converting product id [%s]: %v", pi.(string), err)
-				break
+
+				panic(err)
 			}
 
 			//if categories map is nil, first initialize the map
@@ -422,7 +405,7 @@ func (am *Amember) ProductCategories() map[int]map[int]int {
 		}
 
 	}
-	am.Gologger.Info("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] products with categories in [%f] seconds", len(pc), time.Since(start).Seconds()), golog.DEBUG)
 
 	return pc
 }
@@ -442,11 +425,9 @@ func (am *Amember) Products(p Params) map[int]Product {
 		//add page param the url
 		url := fmt.Sprintf("%s/api/products?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
 
-		am.Gologger.Debug("URL: %s", url)
-
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Error("doGet error: %v", err)
+			am.Gologger.Log(err, golog.ERROR)
 			return products
 		}
 
@@ -476,7 +457,7 @@ func (am *Amember) Products(p Params) map[int]Product {
 
 	}
 
-	am.Gologger.Info("Returned [%d] products in [%f] seconds", len(products), time.Since(start).Seconds())
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] products in [%f] seconds", len(products), time.Since(start).Seconds()), golog.DEBUG)
 
 	return products
 }
@@ -484,6 +465,8 @@ func (am *Amember) Products(p Params) map[int]Product {
 func (am *Amember) doGet(url string) (map[string]interface{}, error) {
 
 	response := make(map[string]interface{})
+
+	am.Gologger.Log(fmt.Sprintf("GET: %s", url), golog.DEBUG)
 
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -505,6 +488,22 @@ func (am *Amember) doGet(url string) (map[string]interface{}, error) {
 		return response, err
 	}
 
+	var responseError bool
+	var responseMessage string
+
+	if _, ok := response["error"]; ok {
+		responseError = response["error"].(bool)
+	}
+
+	if _, ok := response["message"]; ok {
+		responseMessage = response["message"].(string)
+
+	}
+
+	if responseError == true {
+		return response, errors.New(responseMessage)
+	}
+
 	return response, nil
 }
 
@@ -521,11 +520,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 		val, ok := m[jsonTag]
 		if !ok {
-			am.Gologger.Error("Key [%s] not found in map %#v", jsonTag, m)
-		}
-
-		if jsonTag == "added" {
-
+			am.Gologger.Debug("Key [%s] not found in map %#v", jsonTag, m)
 		}
 
 		//check inf the underlaying value of interface{} is nil.
@@ -546,6 +541,10 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			//switch on the type of underlying value of the interface, and attempt a conversion to int
 			switch kind {
 			case reflect.String:
+				//if the string is empty leave the 0 value
+				if val.(string) == "" {
+					break
+				}
 
 				v, err := strconv.Atoi(val.(string))
 				if err != nil {
@@ -604,7 +603,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			}
 			f.Set(reflect.ValueOf(ct))
 		default:
-			am.Gologger.Error("Type for field [%s] not found: %v", jsonTag, t)
+			am.Gologger.Debug("Type for field [%s] not found: %v", jsonTag, t)
 
 		}
 	}
@@ -641,4 +640,44 @@ func validAccess(a Access) bool {
 	}
 
 	return true
+}
+
+func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
+
+	expiredUsers := make(map[string]User)
+	//1 get users
+	users := am.Users(Params{})
+	//2 get accesses
+	accesses := am.Accesses(Params{}, false)
+
+	// for each user
+	//// for each access
+	//// if access=active break, if expire is not before the wanted interval continue, else (if for each was not breaked by an active subscription or a subscriptio with an earlier expire date) add this user to the list
+
+	for _, u := range users {
+
+		excludeUser := false
+		var expired time.Time
+
+		for _, a := range accesses[u.UserID] {
+
+			//if the expire_date of at least one access is earlier than expiredSince, then break the foreach here. This user must not be added to the list
+			if time.Since(a.ExpireDate.Time).Hours() < float64(expiredSince*24) {
+				excludeUser = true
+				break
+			}
+
+			//get the last access
+			if a.ExpireDate.Time.After(expired) {
+				expired = a.ExpireDate.Time
+			}
+
+		}
+
+		if !excludeUser {
+			expiredUsers[u.Login] = u
+			am.Gologger.Log(fmt.Sprintf("Adding user to expired list: [username: %s] [expired: %s]  [days: %f]", u.Login, expired.Format("2006-01-02"), time.Since(expired).Hours()/24), golog.INFO)
+		}
+	}
+	return expiredUsers
 }
