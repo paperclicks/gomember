@@ -1,0 +1,6 @@
+github.com/paperclicks/go-rabbitmq v0.0.0-20200512193555-22e017683e0f h1:5WFdKVmBMZz5qvHEvicN3uduc3jYHIDghdDDGN/eLa0=
+github.com/paperclicks/go-rabbitmq v0.0.0-20200512193555-22e017683e0f/go.mod h1:fEf5TbNraLDvH44Kk53cVtEjcmdgf7w8V9H8+Spmq3U=
+github.com/paperclicks/golog v0.0.0-20190125102443-e094e2090305 h1:a3/Qpb3lVS/ce4Ine+FFc4LNi8lPbchz0mvMe7+H+Fk=
+github.com/paperclicks/golog v0.0.0-20190125102443-e094e2090305/go.mod h1:Gs12aJQwbJO7ziMa0hG28xTN7UitBGeiETrRkUGtikU=
+github.com/streadway/amqp v1.0.0 h1:kuuDrUJFZL1QYL9hUNuCxNObNzB0bV/ZG5jV3RWAQgo=
+github.com/streadway/amqp v1.0.0/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=

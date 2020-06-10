@@ -306,8 +306,14 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 			am.mapToStruct(uMap, &u)
 			membership.User = u
 
-			//if this user got no nested element (meaning no accesses) skip it
-			if uMap["nested"] == nil {
+			//if this user got no nested element, and activeAccessOnly=true skip this user
+			if uMap["nested"] == nil && activeAccessOnly {
+				continue
+			}
+
+			//if this user got no nested element, but activeAccessOnly=false, add user and skip the rest
+			if uMap["nested"] == nil && !activeAccessOnly {
+				memberships[membership.User.Login] = membership
 				continue
 			}
 
