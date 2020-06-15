@@ -295,6 +295,7 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 
 			membership := Membership{}
 
+
 			if k == "_total" {
 				continue
 			}
