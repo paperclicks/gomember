@@ -1,6 +1,7 @@
 package amember
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/paperclicks/golog"
 )
 
@@ -18,6 +20,7 @@ type Amember struct {
 	APIURL   string
 	Gologger *golog.Golog
 	client   *http.Client
+	DB *sql.DB
 }
 
 type Params struct {
@@ -40,6 +43,35 @@ func New(apiURL string, apiKey string, gl *golog.Golog) *Amember {
 
 	return &Amember{APIURL: apiURL, APIKey: apiKey, Gologger: gl, client: cli}
 }
+
+func NewWithDb(apiURL string, apiKey string,dburi string, gl *golog.Golog) (*Amember,error) {
+
+	//create a custom timout dialer
+	dialer := &net.Dialer{Timeout: 30 * time.Second}
+
+	//create a custom transport layer to use during API calls
+	tr := &http.Transport{
+		DialContext:         dialer.DialContext,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+
+	cli := &http.Client{Transport: tr}
+
+	db, err := sql.Open("mysql", dburi)
+	if err != nil {
+		gl.Log(err.Error(), golog.ERROR)
+		return nil,err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		gl.Log(err.Error(), golog.ERROR)
+		return nil,err
+	}
+
+	return &Amember{APIURL: apiURL, APIKey: apiKey,DB: db, Gologger: gl, client: cli},nil
+}
+
 
 //Users returns a map of User having username as key
 func (am *Amember) Users(p Params) map[string]User {
@@ -687,4 +719,109 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 		}
 	}
 	return expiredUsers
+}
+
+//PaymentsByDay returns a map having username as key and Payment object as value, for a given date
+//For native payments: itemTitle=Native, itemDescription=""
+//For mobile payments: itemTitle=Mobile, itemDescription=""
+//For overage payments: itemTitle=Overage, itemDescription=[Native,Mobile]
+func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDescription string) (map[string]Payment,error){
+
+	paymets :=make(map[string]Payment)
+
+	q:=`select ip.user_id, u.login as username,  ip.dattm, ip.amount
+       	from am_invoice_payment ip
+		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
+		left join am_user u on ip.user_id=u.user_id
+		where ip.amount>0.0 and (refund_amount is  null or refund_amount=0.0)
+		and ip.dattm between ? and ?
+		and item_title  like ? and item_description like ?`
+
+
+	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
+	to :=fmt.Sprintf("%s 23:59:59",datetime.Format("2006-01-02"))
+
+	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemDescription+"%")
+	defer rows.Close()
+
+	if err != nil {
+		return paymets,err
+	}
+
+
+
+	for rows.Next() {
+		var (
+			userID            int
+			username      string
+			paymentdate          sql.NullTime
+			amount      float32
+
+		)
+
+		err := rows.Scan(&userID, &username, &paymentdate, &amount)
+		if err != nil {
+			return paymets,err
+		}
+
+		payment := Payment{}
+		payment.Username=username
+		payment.Amount=amount
+		payment.Dattm=paymentdate
+
+		paymets[username]=payment
+
+	}
+	return paymets,nil
+}
+
+
+//RefundsByDate returns a map having username as key and Payment object as value, for refunds in a given date
+func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[string]Payment,error){
+
+	paymets :=make(map[string]Payment)
+
+	q:=`select ip.user_id, u.login as username, ip.refund_dattm, ip.refund_amount
+		 from am_invoice_payment ip
+		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
+		left join am_user u on ip.user_id=u.user_id
+		where ip.refund_amount>0.0
+		and ip.refund_dattm between ? and ? and (item_title like ? or item_description like ?)`
+
+	//it considers a refunds to belong to a certain platform if itemTitle is found in either the description or the title (for example overage refunds)
+	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
+	to :=fmt.Sprintf("%s 23:59:59",datetime.Format("2006-01-02"))
+
+	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemTitle+"%")
+	defer rows.Close()
+
+	if err != nil {
+		return paymets,err
+	}
+
+
+
+	for rows.Next() {
+		var (
+			userID            int
+			username      string
+			refundDate          sql.NullTime
+			amount      float32
+
+		)
+
+		err := rows.Scan(&userID, &username, &refundDate, &amount)
+		if err != nil {
+			return paymets,err
+		}
+
+		payment := Payment{}
+		payment.Username=username
+		payment.RefundAmount=amount
+		payment.RefundDattm=refundDate
+
+		paymets[username]=payment
+
+	}
+	return paymets,nil
 }

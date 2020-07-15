@@ -1,6 +1,7 @@
 package amember
 
 import (
+	"database/sql"
 	"regexp"
 	"strings"
 	"time"
@@ -93,7 +94,51 @@ type Invoice struct {
 	AffID             interface{} `json:"aff_id"`
 	KeywordID         interface{} `json:"keyword_id"`
 	RemoteAddr        interface{} `json:"remote_addr"`
+	Nested  InvoiceNested `json:"nested"`
 }
+
+
+	type InvoiceNested struct {
+		Access []Access `json:"access"`
+		Invoice_items []struct {
+			BillingPlanData string      `json:"billing_plan_data"`
+			BillingPlanID   string      `json:"billing_plan_id"`
+			Currency        string      `json:"currency"`
+			FirstDiscount   string      `json:"first_discount"`
+			FirstPeriod     string      `json:"first_period"`
+			FirstPrice      string      `json:"first_price"`
+			FirstShipping   string      `json:"first_shipping"`
+			FirstTax        string      `json:"first_tax"`
+			FirstTotal      string      `json:"first_total"`
+			InvoiceID       string      `json:"invoice_id"`
+			InvoiceItemID   int64       `json:"invoice_item_id"`
+			InvoicePublicID string      `json:"invoice_public_id"`
+			IsCountable     string      `json:"is_countable"`
+			IsTangible      interface{} `json:"is_tangible"`
+			ItemDescription string      `json:"item_description"`
+			ItemID          string      `json:"item_id"`
+			ItemTitle       string      `json:"item_title"`
+			ItemType        string      `json:"item_type"`
+			Option1         interface{} `json:"option1"`
+			Option2         interface{} `json:"option2"`
+			Option3         interface{} `json:"option3"`
+			Options         interface{} `json:"options"`
+			Qty             string      `json:"qty"`
+			RebillTimes     string      `json:"rebill_times"`
+			SecondDiscount  string      `json:"second_discount"`
+			SecondPeriod    string      `json:"second_period"`
+			SecondPrice     string      `json:"second_price"`
+			SecondShipping  string      `json:"second_shipping"`
+			SecondTax       string      `json:"second_tax"`
+			SecondTotal     string      `json:"second_total"`
+			TaxGroup        string      `json:"tax_group"`
+			TaxRate         interface{} `json:"tax_rate"`
+			VariableQty     string      `json:"variable_qty"`
+		} `json:"invoice-items"`
+		Invoice_payments []Payment `json:"invoice-payments"`
+	}
+
+
 
 type Access struct {
 	AccessID         int        `json:"access_id"`
@@ -120,16 +165,18 @@ type Payment struct {
 	PaysysID            string      `json:"paysys_id"`
 	ReceiptID           string      `json:"receipt_id"`
 	TransactionID       string      `json:"transaction_id"`
-	Dattm               *CustomTime `json:"dattm"`
+	Dattm              	sql.NullTime `json:"dattm"`
 	Currency            string      `json:"currency"`
 	Amount              float32     `json:"amount"`
 	Discount            float32     `json:"discount"`
 	Tax                 float32     `json:"tax"`
 	Shipping            float32     `json:"shipping"`
-	RefundDattm         *CustomTime `json:"refund_dattm"`
+	RefundDattm         sql.NullTime `json:"refund_dattm"`
 	RefundAmount        float32     `json:"refund_amount"`
 	BaseCurrencyMulti   float32     `json:"base_currency_multi"`
 	DisplayInvoiceID    string      `json:"display_invoice_id"`
+	Username string `json:"username"`
+
 }
 
 type Product struct {
