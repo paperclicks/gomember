@@ -73,6 +73,7 @@ func NewWithDb(apiURL string, apiKey string,dburi string, gl *golog.Golog) (*Ame
 }
 
 
+
 //Users returns a map of User having username as key
 func (am *Amember) Users(p Params) map[string]User {
 
