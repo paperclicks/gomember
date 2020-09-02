@@ -120,8 +120,8 @@ type Access struct {
 	UserID           int        `json:"user_id"`
 	ProductID        int        `json:"product_id"`
 	TransactionID    string     `json:"transaction_id"`
-	BeginDate        CustomTime `json:"begin_date"`
-	ExpireDate       CustomTime `json:"expire_date"`
+	BeginDate        time.Time `json:"begin_date"`
+	ExpireDate       time.Time `json:"expire_date"`
 	Qty              int        `json:"qty"`
 	Comment          string     `json:"comment"`
 	ProductTitle string `json:"product_title"`
