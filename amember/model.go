@@ -149,7 +149,8 @@ type Payment struct {
 	BaseCurrencyMulti   float32     `json:"base_currency_multi"`
 	DisplayInvoiceID    string      `json:"display_invoice_id"`
 	Username string `json:"username"`
-	PaymentDescription string `json:"payment_description"`
+	PaymentItemDescription string `json:"payment_item_description"`
+	PaymentItemTitle string `json:"payment_item_title"`
 	Refunded bool `json:"refunded"`
 
 }
