@@ -263,7 +263,12 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		ct.Time = t
-
+	case "xxxx-xx-xx xx:xx:xx +xxxx" , "xxxx-xx-xx xx:xx:xx -xxxx":
+		t, err := time.Parse("2006-01-02 15:04:05 -0700", s)
+		if err != nil {
+			return err
+		}
+		ct.Time = t
 	}
 
 	return nil
