@@ -43,7 +43,6 @@ type User struct {
 	Status             int         `json:"status"`
 	Street             string      `json:"street"`
 	Street2            string      `json:"street2"`
-	TaxID              interface{} `json:"tax_id"`
 	Unsubscribed       int         `json:"unsubscribed"`
 	UserAgent          string      `json:"user_agent"`
 	UserID             int         `json:"user_id"`
@@ -51,6 +50,11 @@ type User struct {
 	//StripeCcExpires    string      `json:"stripe_cc_expires"`
 	//StripeCcMasked string      `json:"stripe_cc_masked"`
 	//StripeToken    string      `json:"stripe_token"`
+	CompanyName string `json:"company_name"`
+	CompanyAddress string `json:"company_address"`
+	TaxID              string `json:"taxid"`
+
+
 }
 
 type Invoice struct {
