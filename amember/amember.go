@@ -149,23 +149,79 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 			return invoices
 		}
 
-		//fmt.Printf("%#v", response)
-
-		//perform again a marshall for every element of the response, and attempt to unmarshall into User struct
 		for k, v := range response {
 
 			if k == "_total" {
 				continue
 			}
 
-			m := v.(map[string]interface{})
+			rawInvoice := v.(map[string]interface{})
 
-			i := Invoice{}
+			invoice := Invoice{}
+			nested:=InvoiceNested{}
+
+			invoicePayments := []Payment{}
+			invoiceItems := []Item{}
+			invoiceAccess := []Access{}
+
+
 			//try to parse the map into the struct fields
-			am.mapToStruct(m, &i)
+			am.mapToStruct(rawInvoice, &invoice)
 
-			invoices[i.InvoiceID] = i
+
+			rawNested := rawInvoice["nested"].(map[string]interface{})
+
+
+			for k2,v2 := range rawNested {
+
+				switch k2 {
+				case "invoice-payments":
+
+					rawPayments := v2.([]interface{})
+
+					for _, v3 := range rawPayments {
+						var payment Payment
+						m:=v3.(map[string]interface{})
+
+						am.mapToStruct(m,&payment)
+						invoicePayments=append(invoicePayments,payment)
+					}
+				case "access":
+
+					rawAccess := v2.([]interface{})
+
+					for _, v3 := range rawAccess {
+						var access Access
+						m:=v3.(map[string]interface{})
+
+						am.mapToStruct(m,&access)
+						invoiceAccess=append(invoiceAccess,access)
+					}
+
+				case "invoice-items":
+
+					rawItems := v2.([]interface{})
+
+					for _, v3 := range rawItems {
+						var item Item
+
+						m:=v3.(map[string]interface{})
+
+						am.mapToStruct(m,&item)
+						invoiceItems=append(invoiceItems,item)
+					}
+
+				}
+			}
+
+			nested.InvoicePayments=invoicePayments
+			nested.Access=invoiceAccess
+			nested.InvoiceItems=invoiceItems
+
+			invoice.Nested=nested
+			invoices[invoice.InvoiceID] = invoice
 		}
+
 
 		if len(response) < count+1 {
 			break
@@ -179,6 +235,7 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	return invoices
 }
+
 
 //Accesses returns a map of Access slices. The map has user_id as key
 func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {

@@ -89,7 +89,7 @@ type Invoice struct {
 	DueDate           *CustomTime `json:"due_date"`
 	Terms             interface{} `json:"terms"`
 	Comment           interface{} `json:"comment"`
-	BaseCurrencyMulti float32     `json:"base_currency_multi"`
+	BaseCurrencyMulti string     `json:"base_currency_multi"`
 	SavedFormID       int         `json:"saved_form_id"`
 	AffID             interface{} `json:"aff_id"`
 	KeywordID         interface{} `json:"keyword_id"`
@@ -100,42 +100,9 @@ type Invoice struct {
 
 	type InvoiceNested struct {
 		Access []Access `json:"access"`
-		Invoice_items []struct {
-			BillingPlanData string      `json:"billing_plan_data"`
-			BillingPlanID   string      `json:"billing_plan_id"`
-			Currency        string      `json:"currency"`
-			FirstDiscount   string      `json:"first_discount"`
-			FirstPeriod     string      `json:"first_period"`
-			FirstPrice      string      `json:"first_price"`
-			FirstShipping   string      `json:"first_shipping"`
-			FirstTax        string      `json:"first_tax"`
-			FirstTotal      string      `json:"first_total"`
-			InvoiceID       string      `json:"invoice_id"`
-			InvoiceItemID   int64       `json:"invoice_item_id"`
-			InvoicePublicID string      `json:"invoice_public_id"`
-			IsCountable     string      `json:"is_countable"`
-			IsTangible      interface{} `json:"is_tangible"`
-			ItemDescription string      `json:"item_description"`
-			ItemID          string      `json:"item_id"`
-			ItemTitle       string      `json:"item_title"`
-			ItemType        string      `json:"item_type"`
-			Option1         interface{} `json:"option1"`
-			Option2         interface{} `json:"option2"`
-			Option3         interface{} `json:"option3"`
-			Options         interface{} `json:"options"`
-			Qty             string      `json:"qty"`
-			RebillTimes     string      `json:"rebill_times"`
-			SecondDiscount  string      `json:"second_discount"`
-			SecondPeriod    string      `json:"second_period"`
-			SecondPrice     string      `json:"second_price"`
-			SecondShipping  string      `json:"second_shipping"`
-			SecondTax       string      `json:"second_tax"`
-			SecondTotal     string      `json:"second_total"`
-			TaxGroup        string      `json:"tax_group"`
-			TaxRate         interface{} `json:"tax_rate"`
-			VariableQty     string      `json:"variable_qty"`
-		} `json:"invoice-items"`
-		Invoice_payments []Payment `json:"invoice-payments"`
+		InvoiceItems []Item `json:"invoice-items"`
+		InvoicePayments []Payment `json:"invoice-payments"`
+
 	}
 
 
@@ -153,6 +120,8 @@ type Access struct {
 	ExpireDate       CustomTime `json:"expire_date"`
 	Qty              int        `json:"qty"`
 	Comment          string     `json:"comment"`
+	ProductTitle string `json:"product_title"`
+	Status bool `json:"status"`
 }
 
 type Payment struct {
@@ -176,6 +145,8 @@ type Payment struct {
 	BaseCurrencyMulti   float32     `json:"base_currency_multi"`
 	DisplayInvoiceID    string      `json:"display_invoice_id"`
 	Username string `json:"username"`
+	PaymentDescription string `json:"payment_description"`
+	Refunded bool `json:"refunded"`
 
 }
 
@@ -214,6 +185,42 @@ type Product struct {
 	Title                string     `json:"title"`
 	TrialGroup           string     `json:"trial_group"`
 	URL                  string     `json:"url"`
+}
+
+type Item struct {
+	BillingPlanData string      `json:"billing_plan_data"`
+	BillingPlanID   string      `json:"billing_plan_id"`
+	Currency        string      `json:"currency"`
+	FirstDiscount   string      `json:"first_discount"`
+	FirstPeriod     string      `json:"first_period"`
+	FirstPrice      string      `json:"first_price"`
+	FirstShipping   string      `json:"first_shipping"`
+	FirstTax        string      `json:"first_tax"`
+	FirstTotal      string      `json:"first_total"`
+	InvoiceID       string      `json:"invoice_id"`
+	InvoiceItemID   int64       `json:"invoice_item_id"`
+	InvoicePublicID string      `json:"invoice_public_id"`
+	IsCountable     string      `json:"is_countable"`
+	IsTangible      interface{} `json:"is_tangible"`
+	ItemDescription string      `json:"item_description"`
+	ItemID          string      `json:"item_id"`
+	ItemTitle       string      `json:"item_title"`
+	ItemType        string      `json:"item_type"`
+	Option1         interface{} `json:"option1"`
+	Option2         interface{} `json:"option2"`
+	Option3         interface{} `json:"option3"`
+	Options         interface{} `json:"options"`
+	Qty             string      `json:"qty"`
+	RebillTimes     string      `json:"rebill_times"`
+	SecondDiscount  string      `json:"second_discount"`
+	SecondPeriod    string      `json:"second_period"`
+	SecondPrice     string      `json:"second_price"`
+	SecondShipping  string      `json:"second_shipping"`
+	SecondTax       string      `json:"second_tax"`
+	SecondTotal     string      `json:"second_total"`
+	TaxGroup        string      `json:"tax_group"`
+	TaxRate         interface{} `json:"tax_rate"`
+	VariableQty     string      `json:"variable_qty"`
 }
 
 type APIResponseUser struct {
