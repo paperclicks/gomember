@@ -280,7 +280,7 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 			//try to parse the map into the struct fields
 			am.mapToStruct(m, &i)
 
-			expires := time.Date(i.ExpireDate.Time.Year(), i.ExpireDate.Time.Month(), i.ExpireDate.Time.Day(), 0, 0, 0, 0, i.ExpireDate.Time.Location())
+			expires := time.Date(i.ExpireDate.Year(), i.ExpireDate.Month(), i.ExpireDate.Day(), 0, 0, 0, 0, i.ExpireDate.Location())
 
 			//skip any expired acces if we are requesting only active ones
 			if expires.Before(today) && activeOnly {
@@ -699,6 +699,15 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 				break
 			}
 			f.Set(reflect.ValueOf(ct))
+		case time.Time:
+
+			t,err:=time.Parse("2006-01-02",val.(string))
+
+			if err != nil {
+				am.Gologger.Error("error parsing date string %s - %v", val.(string), err)
+				break
+			}
+			f.Set(reflect.ValueOf(t))
 		default:
 			am.Gologger.Debug("Type for field [%s] not found: %v", jsonTag, t)
 
@@ -729,7 +738,7 @@ func validAccess(a Access) bool {
 	t := time.Now()
 	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
-	expires := time.Date(a.ExpireDate.Time.Year(), a.ExpireDate.Time.Month(), a.ExpireDate.Time.Day(), 0, 0, 0, 0, a.ExpireDate.Time.Location())
+	expires := time.Date(a.ExpireDate.Year(), a.ExpireDate.Month(), a.ExpireDate.Day(), 0, 0, 0, 0, a.ExpireDate.Location())
 
 	//skip any expired acces if we are requesting only active ones
 	if expires.Before(today) {
@@ -759,14 +768,14 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 		for _, a := range accesses[u.UserID] {
 
 			//if the expire_date of at least one access is earlier than expiredSince, then break the foreach here. This user must not be added to the list
-			if time.Since(a.ExpireDate.Time).Hours() < float64(expiredSince*24) {
+			if time.Since(a.ExpireDate).Hours() < float64(expiredSince*24) {
 				excludeUser = true
 				break
 			}
 
 			//get the last access
-			if a.ExpireDate.Time.After(expired) {
-				expired = a.ExpireDate.Time
+			if a.ExpireDate.After(expired) {
+				expired = a.ExpireDate
 			}
 
 		}
