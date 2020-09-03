@@ -821,7 +821,7 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		var (
 			userID            int
 			username      string
-			paymentdate          sql.NullTime
+			paymentdate          CustomTime
 			amount      float32
 
 		)
@@ -872,7 +872,7 @@ func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[strin
 		var (
 			userID            int
 			username      string
-			refundDate          sql.NullTime
+			refundDate          CustomTime
 			amount      float32
 
 		)

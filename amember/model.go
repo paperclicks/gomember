@@ -1,7 +1,6 @@
 package amember
 
 import (
-	"database/sql"
 	"regexp"
 	"strings"
 	"time"
@@ -145,13 +144,13 @@ type Payment struct {
 	PaysysID            string      `json:"paysys_id"`
 	ReceiptID           string      `json:"receipt_id"`
 	TransactionID       string      `json:"transaction_id"`
-	Dattm              	sql.NullTime `json:"dattm"`
+	Dattm              	CustomTime `json:"dattm"`
 	Currency            string      `json:"currency"`
 	Amount              float32     `json:"amount"`
 	Discount            float32     `json:"discount"`
 	Tax                 float32     `json:"tax"`
 	Shipping            float32     `json:"shipping"`
-	RefundDattm         sql.NullTime `json:"refund_dattm"`
+	RefundDattm         CustomTime `json:"refund_dattm"`
 	RefundAmount        float32     `json:"refund_amount"`
 	BaseCurrencyMulti   float32     `json:"base_currency_multi"`
 	DisplayInvoiceID    string      `json:"display_invoice_id"`
