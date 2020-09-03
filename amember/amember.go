@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/araddon/dateparse"
 	"net"
 	"net/http"
 	"reflect"
@@ -701,12 +702,11 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			f.Set(reflect.ValueOf(ct))
 		case time.Time:
 
-			t,err:=time.Parse("2006-01-02",val.(string))
-
+			t,err:=dateparse.ParseAny(val.(string))
 			if err != nil {
-				am.Gologger.Error("error parsing date string %s - %v", val.(string), err)
-				break
+				panic(err)
 			}
+
 			f.Set(reflect.ValueOf(t))
 		default:
 			am.Gologger.Debug("Type for field [%s] not found: %v", jsonTag, t)
@@ -821,7 +821,7 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		var (
 			userID            int
 			username      string
-			paymentdate          CustomTime
+			paymentdate          sql.NullTime
 			amount      float32
 
 		)
@@ -834,7 +834,7 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		payment := Payment{}
 		payment.Username=username
 		payment.Amount=amount
-		payment.Dattm=paymentdate
+		payment.Dattm=paymentdate.Time
 
 		paymets[username]=payment
 
@@ -872,7 +872,7 @@ func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[strin
 		var (
 			userID            int
 			username      string
-			refundDate          CustomTime
+			refundDate          sql.NullTime
 			amount      float32
 
 		)
@@ -885,7 +885,7 @@ func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[strin
 		payment := Payment{}
 		payment.Username=username
 		payment.RefundAmount=amount
-		payment.RefundDattm=refundDate
+		payment.RefundDattm=refundDate.Time
 
 		paymets[username]=payment
 
