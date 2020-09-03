@@ -126,6 +126,13 @@ type Access struct {
 	Comment          string     `json:"comment"`
 	ProductTitle string `json:"product_title"`
 	Status bool `json:"status"`
+	ProductDescription string `json:"product_description"`
+	Spend float64 `json:"spend"`
+	SpendCoveredByPlan float64 `json:"spend_covered_by_plan"`
+	Overage float64 `json:"overage"`
+	ProjectedSpend float64 `json:"projected_spend"`
+	ProjectedOverage float64 `json:"projected_overage"`
+	
 }
 
 type Payment struct {
