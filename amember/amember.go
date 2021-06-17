@@ -60,7 +60,6 @@ func NewWithDb(apiURL string, apiKey string,dburi string, gl *golog.Golog) (*Ame
 
 	db, err := sql.Open("mysql", dburi)
 	if err != nil {
-		gl.Log(err.Error(), golog.ERROR)
 		return nil,err
 	}
 
@@ -618,7 +617,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 		val, ok := m[jsonTag]
 		if !ok {
-			am.Gologger.Debug("Key [%s] not found in map %#v", jsonTag, m)
+			am.Gologger.Log(fmt.Sprintf("Key [%s] not found in map %#v", jsonTag, m),golog.DEBUG)
 		}
 
 		//check inf the underlaying value of interface{} is nil.
@@ -646,7 +645,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 				v, err := strconv.Atoi(val.(string))
 				if err != nil {
-					am.Gologger.Error("strconv error for field [%s]: %v", jsonTag, err)
+					am.Gologger.Log(fmt.Sprintf("strconv error for field [%s]: %v", jsonTag, err),golog.ERROR)
 					break
 				}
 				f.SetInt(int64(v))
@@ -654,35 +653,35 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			case reflect.Int:
 
 				if _, ok := val.(int); !ok {
-					am.Gologger.Error("assertion to int failed for field [%s]: %v", jsonTag, val)
+					am.Gologger.Log(fmt.Sprintf("assertion to int failed for field [%s]: %v", jsonTag, val),golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int)))
 
 			case reflect.Int32:
 				if _, ok := val.(int32); !ok {
-					am.Gologger.Error("assertion to int32 failed: %v", val)
+					am.Gologger.Log(fmt.Sprintf("assertion to int32 failed: %v", val),golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int32)))
 
 			case reflect.Int64:
 				if _, ok := val.(int64); !ok {
-					am.Gologger.Error("assertion to int64 failed: %v", val)
+					am.Gologger.Log(fmt.Sprintf("assertion to int64 failed: %v", val),golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int64)))
 
 			case reflect.Float64:
 				if _, ok := val.(float64); !ok {
-					am.Gologger.Error("assertion to float64 failed: %v", val)
+					am.Gologger.Log(fmt.Sprintf("assertion to float64 failed: %v", val),golog.ERROR)
 					break
 				}
 
 				f.SetInt(int64(val.(float64)))
 
 			default:
-				am.Gologger.Debug("%v", reflect.ValueOf(val).Kind())
+				am.Gologger.Log(fmt.Sprintf("%v", reflect.ValueOf(val).Kind()),golog.DEBUG)
 			}
 
 		case float32:
@@ -696,7 +695,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			ct := CustomTime{}
 			err := ct.UnmarshalJSON([]byte(val.(string)))
 			if err != nil {
-				am.Gologger.Error("Error parsing date string %s - %v", val.(string), err)
+				am.Gologger.Log(fmt.Sprintf("Error parsing date string %s - %v", val.(string), err),golog.ERROR)
 				break
 			}
 			f.Set(reflect.ValueOf(ct))
@@ -709,7 +708,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 			f.Set(reflect.ValueOf(t))
 		default:
-			am.Gologger.Debug("Type for field [%s] not found: %v", jsonTag, t)
+			am.Gologger.Log(fmt.Sprintf("Type for field [%s] not found: %v", jsonTag, t),golog.DEBUG)
 
 		}
 	}
