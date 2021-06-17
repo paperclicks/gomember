@@ -52,6 +52,7 @@ type User struct {
 	CompanyName string `json:"company_name"`
 	CompanyAddress string `json:"company_address"`
 	TaxID              string `json:"taxid"`
+	ExpiredAt CustomTime `json:"expired_at"`
 
 
 }

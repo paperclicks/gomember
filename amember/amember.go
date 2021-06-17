@@ -781,7 +781,9 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 		}
 
 		if !excludeUser {
+			u.ExpiredAt.Time=expired
 			expiredUsers[u.Login] = u
+
 			am.Gologger.Log(fmt.Sprintf("Adding user to expired list: [username: %s] [expired: %s]  [days: %f]", u.Login, expired.Format("2006-01-02"), time.Since(expired).Hours()/24), golog.INFO)
 		}
 	}
