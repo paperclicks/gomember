@@ -797,6 +797,11 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 
 	paymets :=make(map[string]Payment)
 
+	//check connection and reconnet if necessary
+	err:=am.DB.Ping()
+	if err != nil {
+		return paymets,err
+	}
 	q:=`select ip.user_id, u.login as username,  ip.dattm, ip.amount
        	from am_invoice_payment ip
 		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
@@ -848,6 +853,12 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[string]Payment,error){
 
 	paymets :=make(map[string]Payment)
+
+	//check connection and reconnet if necessary
+	err:=am.DB.Ping()
+	if err != nil {
+		return paymets,err
+	}
 
 	q:=`select ip.user_id, u.login as username, ip.refund_dattm, ip.refund_amount
 		 from am_invoice_payment ip
