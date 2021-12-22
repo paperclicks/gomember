@@ -808,13 +808,13 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		left join am_user u on ip.user_id=u.user_id
 		where ip.amount>0.0 and (refund_amount is  null or refund_amount=0.0)
 		and ip.dattm between ? and ?
-		and ii.item_title  like ? and ii.item_description like ?`
+		and ii.item_title  like ? and (ii.item_title  like ? OR ii.item_description like ?)`
 
 
 	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
 	to :=fmt.Sprintf("%s 23:59:59",datetime.Format("2006-01-02"))
 
-	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemDescription+"%")
+	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemTitle+"%","%"+itemDescription+"%")
 	defer rows.Close()
 
 	if err != nil {
