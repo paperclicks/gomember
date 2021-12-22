@@ -808,7 +808,7 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		left join am_user u on ip.user_id=u.user_id
 		where ip.amount>0.0 and (refund_amount is  null or refund_amount=0.0)
 		and ip.dattm between ? and ?
-		and item_title  like ? and item_description like ?`
+		and ii.item_title  like ? and ii.item_description like ?`
 
 
 	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
@@ -865,7 +865,7 @@ func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[strin
 		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
 		left join am_user u on ip.user_id=u.user_id
 		where ip.refund_amount>0.0
-		and ip.refund_dattm between ? and ? and (item_title like ? or item_description like ?)`
+		and ip.refund_dattm between ? and ? and (ii.item_title like ? or ii.item_description like ?)`
 
 	//it considers a refunds to belong to a certain platform if itemTitle is found in either the description or the title (for example overage refunds)
 	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
