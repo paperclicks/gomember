@@ -802,6 +802,8 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 	if err != nil {
 		return paymets,err
 	}
+
+	//because overages do not have an item description anymore, but all the description is inside the item title, we need to check for the keyword Native
 	q:=`select ip.user_id, u.login as username,  ip.dattm, ip.amount
        	from am_invoice_payment ip
 		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
