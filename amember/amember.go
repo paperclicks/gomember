@@ -21,7 +21,7 @@ type Amember struct {
 	APIURL   string
 	Gologger *golog.Golog
 	client   *http.Client
-	DB *sql.DB
+	DB       *sql.DB
 }
 
 type Params struct {
@@ -45,7 +45,7 @@ func New(apiURL string, apiKey string, gl *golog.Golog) *Amember {
 	return &Amember{APIURL: apiURL, APIKey: apiKey, Gologger: gl, client: cli}
 }
 
-func NewWithDb(apiURL string, apiKey string,dburi string, gl *golog.Golog) (*Amember,error) {
+func NewWithDb(apiURL string, apiKey string, dburi string, gl *golog.Golog) (*Amember, error) {
 
 	//create a custom timout dialer
 	dialer := &net.Dialer{Timeout: 30 * time.Second}
@@ -60,19 +60,17 @@ func NewWithDb(apiURL string, apiKey string,dburi string, gl *golog.Golog) (*Ame
 
 	db, err := sql.Open("mysql", dburi)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	err = db.Ping()
 	if err != nil {
 		gl.Log(err.Error(), golog.ERROR)
-		return nil,err
+		return nil, err
 	}
 
-	return &Amember{APIURL: apiURL, APIKey: apiKey,DB: db, Gologger: gl, client: cli},nil
+	return &Amember{APIURL: apiURL, APIKey: apiKey, DB: db, Gologger: gl, client: cli}, nil
 }
-
-
 
 //Users returns a map of User having username as key
 func (am *Amember) Users(p Params) map[string]User {
@@ -158,21 +156,18 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 			rawInvoice := v.(map[string]interface{})
 
 			invoice := Invoice{}
-			nested:=InvoiceNested{}
+			nested := InvoiceNested{}
 
 			invoicePayments := []Payment{}
 			invoiceItems := []Item{}
 			invoiceAccess := []Access{}
 
-
 			//try to parse the map into the struct fields
 			am.mapToStruct(rawInvoice, &invoice)
 
-
 			rawNested := rawInvoice["nested"].(map[string]interface{})
 
-
-			for k2,v2 := range rawNested {
+			for k2, v2 := range rawNested {
 
 				switch k2 {
 				case "invoice-payments":
@@ -181,10 +176,10 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 					for _, v3 := range rawPayments {
 						var payment Payment
-						m:=v3.(map[string]interface{})
+						m := v3.(map[string]interface{})
 
-						am.mapToStruct(m,&payment)
-						invoicePayments=append(invoicePayments,payment)
+						am.mapToStruct(m, &payment)
+						invoicePayments = append(invoicePayments, payment)
 					}
 				case "access":
 
@@ -192,10 +187,10 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 					for _, v3 := range rawAccess {
 						var access Access
-						m:=v3.(map[string]interface{})
+						m := v3.(map[string]interface{})
 
-						am.mapToStruct(m,&access)
-						invoiceAccess=append(invoiceAccess,access)
+						am.mapToStruct(m, &access)
+						invoiceAccess = append(invoiceAccess, access)
 					}
 
 				case "invoice-items":
@@ -205,23 +200,22 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 					for _, v3 := range rawItems {
 						var item Item
 
-						m:=v3.(map[string]interface{})
+						m := v3.(map[string]interface{})
 
-						am.mapToStruct(m,&item)
-						invoiceItems=append(invoiceItems,item)
+						am.mapToStruct(m, &item)
+						invoiceItems = append(invoiceItems, item)
 					}
 
 				}
 			}
 
-			nested.InvoicePayments=invoicePayments
-			nested.Access=invoiceAccess
-			nested.InvoiceItems=invoiceItems
+			nested.InvoicePayments = invoicePayments
+			nested.Access = invoiceAccess
+			nested.InvoiceItems = invoiceItems
 
-			invoice.Nested=nested
+			invoice.Nested = nested
 			invoices[invoice.InvoiceID] = invoice
 		}
-
 
 		if len(response) < count+1 {
 			break
@@ -235,7 +229,6 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	return invoices
 }
-
 
 //Accesses returns a map of Access slices. The map has user_id as key
 func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
@@ -384,7 +377,6 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 		for k, v := range response {
 
 			membership := Membership{}
-
 
 			if k == "_total" {
 				continue
@@ -617,7 +609,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 		val, ok := m[jsonTag]
 		if !ok {
-			am.Gologger.Log(fmt.Sprintf("Key [%s] not found in map %#v", jsonTag, m),golog.DEBUG)
+			am.Gologger.Log(fmt.Sprintf("Key [%s] not found in map %#v", jsonTag, m), golog.DEBUG)
 		}
 
 		//check inf the underlaying value of interface{} is nil.
@@ -645,7 +637,7 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 
 				v, err := strconv.Atoi(val.(string))
 				if err != nil {
-					am.Gologger.Log(fmt.Sprintf("strconv error for field [%s]: %v", jsonTag, err),golog.ERROR)
+					am.Gologger.Log(fmt.Sprintf("strconv error for field [%s]: %v", jsonTag, err), golog.ERROR)
 					break
 				}
 				f.SetInt(int64(v))
@@ -653,35 +645,35 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			case reflect.Int:
 
 				if _, ok := val.(int); !ok {
-					am.Gologger.Log(fmt.Sprintf("assertion to int failed for field [%s]: %v", jsonTag, val),golog.ERROR)
+					am.Gologger.Log(fmt.Sprintf("assertion to int failed for field [%s]: %v", jsonTag, val), golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int)))
 
 			case reflect.Int32:
 				if _, ok := val.(int32); !ok {
-					am.Gologger.Log(fmt.Sprintf("assertion to int32 failed: %v", val),golog.ERROR)
+					am.Gologger.Log(fmt.Sprintf("assertion to int32 failed: %v", val), golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int32)))
 
 			case reflect.Int64:
 				if _, ok := val.(int64); !ok {
-					am.Gologger.Log(fmt.Sprintf("assertion to int64 failed: %v", val),golog.ERROR)
+					am.Gologger.Log(fmt.Sprintf("assertion to int64 failed: %v", val), golog.ERROR)
 					break
 				}
 				f.SetInt(int64(val.(int64)))
 
 			case reflect.Float64:
 				if _, ok := val.(float64); !ok {
-					am.Gologger.Log(fmt.Sprintf("assertion to float64 failed: %v", val),golog.ERROR)
+					am.Gologger.Log(fmt.Sprintf("assertion to float64 failed: %v", val), golog.ERROR)
 					break
 				}
 
 				f.SetInt(int64(val.(float64)))
 
 			default:
-				am.Gologger.Log(fmt.Sprintf("%v", reflect.ValueOf(val).Kind()),golog.DEBUG)
+				am.Gologger.Log(fmt.Sprintf("%v", reflect.ValueOf(val).Kind()), golog.DEBUG)
 			}
 
 		case float32:
@@ -695,20 +687,21 @@ func (am *Amember) mapToStruct(m map[string]interface{}, s interface{}) {
 			ct := CustomTime{}
 			err := ct.UnmarshalJSON([]byte(val.(string)))
 			if err != nil {
-				am.Gologger.Log(fmt.Sprintf("Error parsing date string %s - %v", val.(string), err),golog.ERROR)
+				am.Gologger.Log(fmt.Sprintf("Error parsing date string %s - %v", val.(string), err), golog.ERROR)
 				break
 			}
 			f.Set(reflect.ValueOf(ct))
 		case time.Time:
 
-			t,err:=dateparse.ParseAny(val.(string))
+			t, err := dateparse.ParseAny(val.(string))
 			if err != nil {
-				panic(err)
+				am.Gologger.Log(fmt.Sprintf("Error parsing date string %s - %v", val.(string), err), golog.ERROR)
+				break
 			}
 
 			f.Set(reflect.ValueOf(t))
 		default:
-			am.Gologger.Log(fmt.Sprintf("Type for field [%s] not found: %v", jsonTag, t),golog.DEBUG)
+			am.Gologger.Log(fmt.Sprintf("Type for field [%s] not found: %v", jsonTag, t), golog.DEBUG)
 
 		}
 	}
@@ -780,7 +773,7 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 		}
 
 		if !excludeUser {
-			u.ExpiredAt.Time=expired
+			u.ExpiredAt.Time = expired
 			expiredUsers[u.Login] = u
 
 			am.Gologger.Log(fmt.Sprintf("Adding user to expired list: [username: %s] [expired: %s]  [days: %f]", u.Login, expired.Format("2006-01-02"), time.Since(expired).Hours()/24), golog.INFO)
@@ -793,18 +786,18 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 //For native payments: itemTitle=Native, itemDescription=""
 //For mobile payments: itemTitle=Mobile, itemDescription=""
 //For overage payments: itemTitle=Overage, itemDescription=[Native,Mobile]
-func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDescription string) (map[string]Payment,error){
+func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDescription string) (map[string]Payment, error) {
 
-	paymets :=make(map[string]Payment)
+	paymets := make(map[string]Payment)
 
 	//check connection and reconnet if necessary
-	err:=am.DB.Ping()
+	err := am.DB.Ping()
 	if err != nil {
-		return paymets,err
+		return paymets, err
 	}
 
 	//because overages do not have an item description anymore, but all the description is inside the item title, we need to check for the keyword Native
-	q:=`select ip.user_id, u.login as username,  ip.dattm, ip.amount
+	q := `select ip.user_id, u.login as username,  ip.dattm, ip.amount
        	from am_invoice_payment ip
 		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
 		left join am_user u on ip.user_id=u.user_id
@@ -812,57 +805,52 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 		and ip.dattm between ? and ?
 		and ii.item_title  like ? and (ii.item_title  like ? OR ii.item_description like ?)`
 
+	from := fmt.Sprintf("%s 00:00:01", datetime.Format("2006-01-02"))
+	to := fmt.Sprintf("%s 23:59:59", datetime.Format("2006-01-02"))
 
-	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
-	to :=fmt.Sprintf("%s 23:59:59",datetime.Format("2006-01-02"))
-
-	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemTitle+"%","%"+itemDescription+"%")
+	rows, err := am.DB.Query(q, from, to, "%"+itemTitle+"%", "%"+itemTitle+"%", "%"+itemDescription+"%")
 	defer rows.Close()
 
 	if err != nil {
-		return paymets,err
+		return paymets, err
 	}
-
-
 
 	for rows.Next() {
 		var (
-			userID            int
-			username      string
-			paymentdate          sql.NullTime
+			userID      int
+			username    string
+			paymentdate sql.NullTime
 			amount      float32
-
 		)
 
 		err := rows.Scan(&userID, &username, &paymentdate, &amount)
 		if err != nil {
-			return paymets,err
+			return paymets, err
 		}
 
 		payment := Payment{}
-		payment.Username=username
-		payment.Amount=amount
-		payment.Dattm=paymentdate.Time
+		payment.Username = username
+		payment.Amount = amount
+		payment.Dattm = paymentdate.Time
 
-		paymets[username]=payment
+		paymets[username] = payment
 
 	}
-	return paymets,nil
+	return paymets, nil
 }
 
-
 //RefundsByDate returns a map having username as key and Payment object as value, for refunds in a given date
-func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[string]Payment,error){
+func (am *Amember) RefundsByDate(datetime time.Time, itemTitle string) (map[string]Payment, error) {
 
-	paymets :=make(map[string]Payment)
+	paymets := make(map[string]Payment)
 
 	//check connection and reconnet if necessary
-	err:=am.DB.Ping()
+	err := am.DB.Ping()
 	if err != nil {
-		return paymets,err
+		return paymets, err
 	}
 
-	q:=`select ip.user_id, u.login as username, ip.refund_dattm, ip.refund_amount
+	q := `select ip.user_id, u.login as username, ip.refund_dattm, ip.refund_amount
 		 from am_invoice_payment ip
 		left join am_invoice_item ii on ii.invoice_id=ip.invoice_id
 		left join am_user u on ip.user_id=u.user_id
@@ -870,39 +858,36 @@ func (am *Amember) RefundsByDate(datetime time.Time,itemTitle string) (map[strin
 		and ip.refund_dattm between ? and ? and (ii.item_title like ? or ii.item_description like ?)`
 
 	//it considers a refunds to belong to a certain platform if itemTitle is found in either the description or the title (for example overage refunds)
-	from :=fmt.Sprintf("%s 00:00:01",datetime.Format("2006-01-02"))
-	to :=fmt.Sprintf("%s 23:59:59",datetime.Format("2006-01-02"))
+	from := fmt.Sprintf("%s 00:00:01", datetime.Format("2006-01-02"))
+	to := fmt.Sprintf("%s 23:59:59", datetime.Format("2006-01-02"))
 
-	rows, err := am.DB.Query(q, from,to,"%"+itemTitle+"%","%"+itemTitle+"%")
+	rows, err := am.DB.Query(q, from, to, "%"+itemTitle+"%", "%"+itemTitle+"%")
 	defer rows.Close()
 
 	if err != nil {
-		return paymets,err
+		return paymets, err
 	}
-
-
 
 	for rows.Next() {
 		var (
-			userID            int
-			username      string
-			refundDate          sql.NullTime
-			amount      float32
-
+			userID     int
+			username   string
+			refundDate sql.NullTime
+			amount     float32
 		)
 
 		err := rows.Scan(&userID, &username, &refundDate, &amount)
 		if err != nil {
-			return paymets,err
+			return paymets, err
 		}
 
 		payment := Payment{}
-		payment.Username=username
-		payment.RefundAmount=amount
-		payment.RefundDattm=refundDate.Time
+		payment.Username = username
+		payment.RefundAmount = amount
+		payment.RefundDattm = refundDate.Time
 
-		paymets[username]=payment
+		paymets[username] = payment
 
 	}
-	return paymets,nil
+	return paymets, nil
 }
