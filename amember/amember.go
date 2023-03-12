@@ -82,15 +82,15 @@ func (am *Amember) Users(p Params) map[string]User {
 
 	users := make(map[string]User)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
+		url := fmt.Sprintf("%s/api/users?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		response, err := am.doGet(url)
 		if err != nil {
@@ -135,14 +135,14 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	invoices := make(map[int]Invoice)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 	//reange over all the pages
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/invoices?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
+		url := fmt.Sprintf("%s/api/invoices?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		response, err := am.doGet(url)
 		if err != nil {
@@ -240,8 +240,8 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	accesses := make(map[int][]Access)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 
 	t := time.Now()
@@ -251,7 +251,7 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/access?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
+		url := fmt.Sprintf("%s/api/access?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		am.Gologger.Log(fmt.Sprintf("GET: %s", url), golog.DEBUG)
 
@@ -304,15 +304,15 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 
 	payments := make(map[int]Payment)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/invoice-payments?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
+		url := fmt.Sprintf("%s/api/invoice-payments?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		response, err := am.doGet(url)
 		if err != nil {
@@ -507,15 +507,15 @@ func (am *Amember) Products(p Params) map[int]Product {
 
 	products := make(map[int]Product)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/products?_key=%s%s&_page=%d&_count=%d", am.APIURL, am.APIKey, params, page, count)
+		url := fmt.Sprintf("%s/api/products?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		response, err := am.doGet(url)
 		if err != nil {
