@@ -358,15 +358,15 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 	start := time.Now()
 	memberships := make(map[string]Membership)
 
-	page := 0
-	count := 100
+	page := p.Page
+	count := p.Count
 	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
 
 		//add page param the url
-		url := fmt.Sprintf("%s/api/users?_key=%s%s&_count=%d&_page=%d", am.APIURL, am.APIKey, params, count, page)
+		url := fmt.Sprintf("%s/api/users?_key=%s%s", am.APIURL, am.APIKey, params)
 
 		response, err := am.doGet(url)
 		if err != nil {
@@ -727,13 +727,13 @@ func (am *Amember) parseParams(p Params) string {
 	}
 
 	//add "page" param; if not set it starts from page=0
-	qs = fmt.Sprintf("%spage=%d", qs, p.Page)
+	qs = fmt.Sprintf("%s&_page=%d", qs, p.Page)
 
 	//add "count" param; if not set the default value is 100
 	if p.Count > 0 {
-		qs = fmt.Sprintf("%scount=%d", qs, p.Count)
+		qs = fmt.Sprintf("%s&_count=%d", qs, p.Count)
 	} else {
-		qs = fmt.Sprintf("%scount=%d", qs, 100)
+		qs = fmt.Sprintf("%s&_count=%d", qs, 100)
 	}
 
 	return qs
