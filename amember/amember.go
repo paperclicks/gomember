@@ -84,6 +84,9 @@ func (am *Amember) Users(p Params) map[string]User {
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
 
 	//reange over all the pages
 	for {
@@ -139,6 +142,10 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
+
 	//reange over all the pages
 	for {
 
@@ -247,6 +254,9 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
 
 	t := time.Now()
 	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
@@ -314,6 +324,9 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
 
 	//reange over all the pages
 	for {
@@ -370,6 +383,9 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
 
 	//reange over all the pages
 	for {
@@ -521,6 +537,9 @@ func (am *Amember) Products(p Params) map[int]Product {
 
 	page := p.Page
 	count := p.Count
+	if p.Count == 0 {
+		count = 100
+	}
 
 	//reange over all the pages
 	for {
