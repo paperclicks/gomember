@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/araddon/dateparse"
 	"net"
 	"net/http"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/araddon/dateparse"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/paperclicks/golog"
@@ -27,6 +28,8 @@ type Amember struct {
 type Params struct {
 	Filter map[string]string
 	Nested []string
+	Count  int
+	Page   int
 }
 
 func New(apiURL string, apiKey string, gl *golog.Golog) *Amember {
@@ -72,7 +75,7 @@ func NewWithDb(apiURL string, apiKey string, dburi string, gl *golog.Golog) (*Am
 	return &Amember{APIURL: apiURL, APIKey: apiKey, DB: db, Gologger: gl, client: cli}, nil
 }
 
-//Users returns a map of User having username as key
+// Users returns a map of User having username as key
 func (am *Amember) Users(p Params) map[string]User {
 
 	start := time.Now()
@@ -230,7 +233,7 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 	return invoices
 }
 
-//Accesses returns a map of Access slices. The map has user_id as key
+// Accesses returns a map of Access slices. The map has user_id as key
 func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	start := time.Now()
@@ -348,8 +351,8 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 	return payments
 }
 
-//Memberships return a map of Membership having username as key.
-//If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
+// Memberships return a map of Membership having username as key.
+// If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
 func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membership {
 
 	start := time.Now()
@@ -442,7 +445,7 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 	return memberships
 }
 
-//ProductCategories returns a map of products having product id as key, and the corresponding map of categories as value
+// ProductCategories returns a map of products having product id as key, and the corresponding map of categories as value
 func (am *Amember) ProductCategories() map[int]map[int]int {
 
 	start := time.Now()
@@ -723,6 +726,16 @@ func (am *Amember) parseParams(p Params) string {
 		qs = fmt.Sprintf("%s&_nested[]=%s", qs, v)
 	}
 
+	//add "page" param; if not set it starts from page=0
+	qs = fmt.Sprintf("%spage=%d", qs, p.Page)
+
+	//add "count" param; if not set the default value is 100
+	if p.Count > 0 {
+		qs = fmt.Sprintf("%scount=%d", qs, p.Count)
+	} else {
+		qs = fmt.Sprintf("%scount=%d", qs, 100)
+	}
+
 	return qs
 }
 
@@ -782,10 +795,10 @@ func (am *Amember) ExpiredUsers(expiredSince int) map[string]User {
 	return expiredUsers
 }
 
-//PaymentsByDay returns a map having username as key and Payment object as value, for a given date
-//For native payments: itemTitle=Native, itemDescription=""
-//For mobile payments: itemTitle=Mobile, itemDescription=""
-//For overage payments: itemTitle=Overage, itemDescription=[Native,Mobile]
+// PaymentsByDay returns a map having username as key and Payment object as value, for a given date
+// For native payments: itemTitle=Native, itemDescription=""
+// For mobile payments: itemTitle=Mobile, itemDescription=""
+// For overage payments: itemTitle=Overage, itemDescription=[Native,Mobile]
 func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDescription string) (map[string]Payment, error) {
 
 	paymets := make(map[string]Payment)
@@ -839,7 +852,7 @@ func (am *Amember) PaymentsByDate(datetime time.Time, itemTitle string, itemDesc
 	return paymets, nil
 }
 
-//RefundsByDate returns a map having username as key and Payment object as value, for refunds in a given date
+// RefundsByDate returns a map having username as key and Payment object as value, for refunds in a given date
 func (am *Amember) RefundsByDate(datetime time.Time, itemTitle string) (map[string]Payment, error) {
 
 	paymets := make(map[string]Payment)
