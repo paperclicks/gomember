@@ -84,10 +84,12 @@ func (am *Amember) Users(p Params) map[string]User {
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/users?_key=%s%s", am.APIURL, am.APIKey, params)
@@ -137,9 +139,12 @@ func (am *Amember) Invoices(p Params) map[int]Invoice {
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 	//reange over all the pages
 	for {
+
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/invoices?_key=%s%s", am.APIURL, am.APIKey, params)
@@ -242,13 +247,16 @@ func (am *Amember) Accesses(p Params, activeOnly bool) map[int][]Access {
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 
 	t := time.Now()
 	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 	//reange over all the pages
 	for {
+
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/access?_key=%s%s", am.APIURL, am.APIKey, params)
@@ -306,10 +314,12 @@ func (am *Amember) Payments(p Params) map[int]Payment {
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/invoice-payments?_key=%s%s", am.APIURL, am.APIKey, params)
@@ -360,10 +370,12 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/users?_key=%s%s", am.APIURL, am.APIKey, params)
@@ -509,10 +521,13 @@ func (am *Amember) Products(p Params) map[int]Product {
 
 	page := p.Page
 	count := p.Count
-	params := am.parseParams(p)
 
 	//reange over all the pages
 	for {
+
+		//update page value and parse params
+		p.Page = page
+		params := am.parseParams(p)
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/products?_key=%s%s", am.APIURL, am.APIKey, params)
