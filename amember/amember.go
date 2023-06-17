@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/paperclicks/golog"
 )
@@ -73,6 +72,70 @@ func NewWithDb(apiURL string, apiKey string, dburi string, gl *golog.Golog) (*Am
 	}
 
 	return &Amember{APIURL: apiURL, APIKey: apiKey, DB: db, Gologger: gl, client: cli}, nil
+}
+
+// Memberships return a map of Membership having username as key.
+// If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
+func (am *Amember) MembershipsFromDB() (map[string]Membership, error) {
+
+	start := time.Now()
+	memberships := make(map[string]Membership)
+
+	users := make(map[int]User)
+	accesses := make(map[int][]Access)
+
+	//get users from amember DB
+	usersQuery := `select user_id, login as username from am_user where status in
+	(1,2) and user_id in (select user_id from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY))`
+
+	rows, err := am.DB.Query(usersQuery)
+	if err != nil {
+		return memberships, err
+	}
+
+	for rows.Next() {
+
+		user := User{}
+		rows.Scan(&user.UserID, &user.Login)
+
+		users[user.UserID] = user
+	}
+
+	//get access from amember DB
+	accessQuery := `select access_id,
+	invoice_id,
+	user_id,
+	product_id,
+	begin_date,
+	expire_date
+from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
+
+	rows, err = am.DB.Query(accessQuery)
+	if err != nil {
+		return memberships, err
+	}
+
+	for rows.Next() {
+
+		access := Access{}
+		rows.Scan(&access.AccessID, &access.InvoiceID, &access.UserID, &access.ProductID, &access.BeginDate, &access.ExpireDate)
+
+		accesses[access.UserID] = append(accesses[access.UserID], access)
+	}
+
+	//build memberships from users and access records
+	for userID, user := range users {
+
+		membership := Membership{}
+		membership.User = user
+		membership.Accesses = accesses[userID]
+
+		memberships[user.Login] = membership
+	}
+
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds()), golog.DEBUG)
+
+	return memberships, nil
 }
 
 // Users returns a map of User having username as key
@@ -395,10 +458,10 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 
 		//add page param the url
 		url := fmt.Sprintf("%s/api/users?_key=%s%s", am.APIURL, am.APIKey, params)
-
+		fmt.Println(url)
 		response, err := am.doGet(url)
 		if err != nil {
-			am.Gologger.Log(err, golog.ERROR)
+			am.Gologger.Log(err.Error(), golog.ERROR)
 			fmt.Println(err)
 			return memberships
 		}
