@@ -399,6 +399,7 @@ func (am *Amember) Memberships(p Params, activeAccessOnly bool) map[string]Membe
 		response, err := am.doGet(url)
 		if err != nil {
 			am.Gologger.Log(err, golog.ERROR)
+			fmt.Println(err)
 			return memberships
 		}
 
