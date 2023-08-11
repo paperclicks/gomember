@@ -156,7 +156,7 @@ func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Tim
 	for rows.Next() {
 
 		user := User{}
-		rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Added, &user.Email, &user.Status)
+		rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Email, &user.Added, &user.Status)
 
 		users[user.UserID] = user
 	}
