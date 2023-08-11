@@ -1,10 +1,60 @@
 package amember
 
 import (
+	"database/sql"
 	"regexp"
 	"strings"
 	"time"
 )
+
+type DBUser struct {
+	Added              sql.NullTime `json:"added"`
+	AffAdded           interface{}  `json:"aff_added"`
+	AffCustomRedirect  int          `json:"aff_custom_redirect"`
+	AffID              interface{}  `json:"aff_id"`
+	AffPayoutType      interface{}  `json:"aff_payout_type"`
+	City               string       `json:"city"`
+	Comment            string       `json:"comment"`
+	Country            string       `json:"country"`
+	DisableLockUntil   sql.NullTime `json:"disable_lock_until"`
+	Email              string       `json:"email"`
+	IAgree             int          `json:"i_agree"`
+	IsAffiliate        int          `json:"is_affiliate"`
+	IsApproved         int          `json:"is_approved"`
+	IsLocked           int          `json:"is_locked"`
+	Lang               string       `json:"lang"`
+	LastIP             string       `json:"last_ip"`
+	LastLogin          sql.NullTime `json:"last_login"`
+	LastSession        string       `json:"last_session"`
+	LastUserAgent      string       `json:"last_user_agent"`
+	Login              string       `json:"login"`
+	NameF              string       `json:"name_f"`
+	NameL              string       `json:"name_l"`
+	NeedSessionRefresh int          `json:"need_session_refresh"`
+	Pass               string       `json:"pass"`
+	PassDattm          sql.NullTime `json:"pass_dattm"`
+	Phone              string       `json:"phone"`
+	RememberKey        string       `json:"remember_key"`
+	RemoteAddr         string       `json:"remote_addr"`
+	ResellerID         int          `json:"reseller_id"`
+	SavedFormID        int          `json:"saved_form_id"`
+	SignupEmailSent    int          `json:"signup_email_sent"`
+	State              string       `json:"state"`
+	Status             int          `json:"status"`
+	Street             string       `json:"street"`
+	Street2            string       `json:"street2"`
+	Unsubscribed       int          `json:"unsubscribed"`
+	UserAgent          string       `json:"user_agent"`
+	UserID             int          `json:"user_id"`
+	Zip                string       `json:"zip"`
+	//StripeCcExpires    string      `json:"stripe_cc_expires"`
+	//StripeCcMasked string      `json:"stripe_cc_masked"`
+	//StripeToken    string      `json:"stripe_token"`
+	CompanyName    string       `json:"company_name"`
+	CompanyAddress string       `json:"company_address"`
+	TaxID          string       `json:"taxid"`
+	ExpiredAt      sql.NullTime `json:"expired_at"`
+}
 
 type User struct {
 	Added              CustomTime  `json:"added"`
@@ -49,117 +99,132 @@ type User struct {
 	//StripeCcExpires    string      `json:"stripe_cc_expires"`
 	//StripeCcMasked string      `json:"stripe_cc_masked"`
 	//StripeToken    string      `json:"stripe_token"`
-	CompanyName string `json:"company_name"`
-	CompanyAddress string `json:"company_address"`
-	TaxID              string `json:"taxid"`
-	ExpiredAt CustomTime `json:"expired_at"`
-
-
+	CompanyName    string     `json:"company_name"`
+	CompanyAddress string     `json:"company_address"`
+	TaxID          string     `json:"taxid"`
+	ExpiredAt      CustomTime `json:"expired_at"`
 }
 
 type Invoice struct {
-	InvoiceID         int         `json:"invoice_id"`
-	UserID            int         `json:"user_id"`
-	PaysysID          string      `json:"paysys_id"`
-	Currency          string      `json:"currency"`
-	FirstSubtotal     float32     `json:"first_subtotal"`
-	FirstDiscount     float32     `json:"first_discount"`
-	FirstTax          float32     `json:"first_tax"`
-	FirstShipping     float32     `json:"first_shipping"`
-	FirstTotal        float32     `json:"first_total"`
-	FirstPeriod       string      `json:"first_period"`
-	RebillTimes       int         `json:"rebill_times"`
-	SecondSubtotal    float32     `json:"second_subtotal"`
-	SecondDiscount    float32     `json:"second_discount"`
-	SecondTax         float32     `json:"second_tax"`
-	SecondShipping    float32     `json:"second_shipping"`
-	SecondTotal       float32     `json:"second_total"`
-	SecondPeriod      string      `json:"second_period"`
-	TaxRate           interface{} `json:"tax_rate"`
-	TaxType           interface{} `json:"tax_type"`
-	TaxTitle          interface{} `json:"tax_title"`
-	Status            int         `json:"status"`
-	CouponID          int         `json:"coupon_id"`
-	CouponCode        string      `json:"coupon_code"`
-	DiscountFirst     float32     `json:"discount_first"`
-	DiscountSecond    float32     `json:"discount_second"`
-	IsConfirmed       int         `json:"is_confirmed"`
-	PublicID          string      `json:"public_id"`
-	InvoiceKey        string      `json:"invoice_key"`
-	TmAdded           *CustomTime `json:"tm_added"`
-	TmStarted         *CustomTime `json:"tm_started"`
-	TmCancelled       *CustomTime `json:"tm_cancelled"`
-	RebillDate        *CustomTime `json:"rebill_date"`
-	DueDate           *CustomTime `json:"due_date"`
-	Terms             interface{} `json:"terms"`
-	Comment           interface{} `json:"comment"`
-	BaseCurrencyMulti string     `json:"base_currency_multi"`
-	SavedFormID       int         `json:"saved_form_id"`
-	AffID             interface{} `json:"aff_id"`
-	KeywordID         interface{} `json:"keyword_id"`
-	RemoteAddr        interface{} `json:"remote_addr"`
-	Nested  InvoiceNested `json:"nested"`
+	InvoiceID         int           `json:"invoice_id"`
+	UserID            int           `json:"user_id"`
+	PaysysID          string        `json:"paysys_id"`
+	Currency          string        `json:"currency"`
+	FirstSubtotal     float32       `json:"first_subtotal"`
+	FirstDiscount     float32       `json:"first_discount"`
+	FirstTax          float32       `json:"first_tax"`
+	FirstShipping     float32       `json:"first_shipping"`
+	FirstTotal        float32       `json:"first_total"`
+	FirstPeriod       string        `json:"first_period"`
+	RebillTimes       int           `json:"rebill_times"`
+	SecondSubtotal    float32       `json:"second_subtotal"`
+	SecondDiscount    float32       `json:"second_discount"`
+	SecondTax         float32       `json:"second_tax"`
+	SecondShipping    float32       `json:"second_shipping"`
+	SecondTotal       float32       `json:"second_total"`
+	SecondPeriod      string        `json:"second_period"`
+	TaxRate           interface{}   `json:"tax_rate"`
+	TaxType           interface{}   `json:"tax_type"`
+	TaxTitle          interface{}   `json:"tax_title"`
+	Status            int           `json:"status"`
+	CouponID          int           `json:"coupon_id"`
+	CouponCode        string        `json:"coupon_code"`
+	DiscountFirst     float32       `json:"discount_first"`
+	DiscountSecond    float32       `json:"discount_second"`
+	IsConfirmed       int           `json:"is_confirmed"`
+	PublicID          string        `json:"public_id"`
+	InvoiceKey        string        `json:"invoice_key"`
+	TmAdded           *CustomTime   `json:"tm_added"`
+	TmStarted         *CustomTime   `json:"tm_started"`
+	TmCancelled       *CustomTime   `json:"tm_cancelled"`
+	RebillDate        *CustomTime   `json:"rebill_date"`
+	DueDate           *CustomTime   `json:"due_date"`
+	Terms             interface{}   `json:"terms"`
+	Comment           interface{}   `json:"comment"`
+	BaseCurrencyMulti string        `json:"base_currency_multi"`
+	SavedFormID       int           `json:"saved_form_id"`
+	AffID             interface{}   `json:"aff_id"`
+	KeywordID         interface{}   `json:"keyword_id"`
+	RemoteAddr        interface{}   `json:"remote_addr"`
+	Nested            InvoiceNested `json:"nested"`
 }
 
-
-	type InvoiceNested struct {
-		Access []Access `json:"access"`
-		InvoiceItems []Item `json:"invoice-items"`
-		InvoicePayments []Payment `json:"invoice-payments"`
-
-	}
-
-
+type InvoiceNested struct {
+	Access          []Access  `json:"access"`
+	InvoiceItems    []Item    `json:"invoice-items"`
+	InvoicePayments []Payment `json:"invoice-payments"`
+}
 
 type Access struct {
-	AccessID         int        `json:"access_id"`
-	InvoiceID        int        `json:"invoice_id"`
-	InvoicePublicID  string     `json:"invoice_public_id"`
-	InvoicePaymentID int        `json:"invoice_payment_id"`
-	InvoiceItemID    int        `json:"invoice_item_id"`
-	UserID           int        `json:"user_id"`
-	ProductID        int        `json:"product_id"`
-	TransactionID    string     `json:"transaction_id"`
-	BeginDate        time.Time `json:"begin_date"`
-	ExpireDate       time.Time `json:"expire_date"`
-	Qty              int        `json:"qty"`
-	Comment          string     `json:"comment"`
-	ProductTitle string `json:"product_title"`
-	Status bool `json:"status"`
-	ProductDescription string `json:"product_description"`
-	Spend float32 `json:"spend"`
-	SpendCoveredByPlan float32 `json:"spend_covered_by_plan"`
-	Overage float32 `json:"overage"`
-	ProjectedSpend float32 `json:"projected_spend"`
-	ProjectedOverage float32 `json:"projected_overage"`
-	
+	AccessID           int       `json:"access_id"`
+	InvoiceID          int       `json:"invoice_id"`
+	InvoicePublicID    string    `json:"invoice_public_id"`
+	InvoicePaymentID   int       `json:"invoice_payment_id"`
+	InvoiceItemID      int       `json:"invoice_item_id"`
+	UserID             int       `json:"user_id"`
+	ProductID          int       `json:"product_id"`
+	TransactionID      string    `json:"transaction_id"`
+	BeginDate          time.Time `json:"begin_date"`
+	ExpireDate         time.Time `json:"expire_date"`
+	Qty                int       `json:"qty"`
+	Comment            string    `json:"comment"`
+	ProductTitle       string    `json:"product_title"`
+	Status             bool      `json:"status"`
+	ProductDescription string    `json:"product_description"`
+	Spend              float32   `json:"spend"`
+	SpendCoveredByPlan float32   `json:"spend_covered_by_plan"`
+	Overage            float32   `json:"overage"`
+	ProjectedSpend     float32   `json:"projected_spend"`
+	ProjectedOverage   float32   `json:"projected_overage"`
+}
+
+type DBAccess struct {
+	AccessID           int            `json:"access_id"`
+	InvoiceID          int            `json:"invoice_id"`
+	InvoicePublicID    sql.NullString `json:"invoice_public_id"`
+	InvoicePaymentID   int            `json:"invoice_payment_id"`
+	InvoiceItemID      int            `json:"invoice_item_id"`
+	UserID             int            `json:"user_id"`
+	ProductID          int            `json:"product_id"`
+	TransactionID      string         `json:"transaction_id"`
+	BeginDate          sql.NullTime   `json:"begin_date"`
+	ExpireDate         sql.NullTime   `json:"expire_date"`
+	Qty                int            `json:"qty"`
+	Comment            string         `json:"comment"`
+	ProductTitle       string         `json:"product_title"`
+	Status             bool           `json:"status"`
+	ProductDescription string         `json:"product_description"`
+	Spend              float32        `json:"spend"`
+	SpendCoveredByPlan float32        `json:"spend_covered_by_plan"`
+	Overage            float32        `json:"overage"`
+	ProjectedSpend     float32        `json:"projected_spend"`
+	ProjectedOverage   float32        `json:"projected_overage"`
 }
 
 type Payment struct {
-	ConversionTrackDone int         `json:"conversion-track-done"`
-	GoogleAnalyticsDone int         `json:"google-analytics-done"`
-	InvoicePaymentID    int         `json:"invoice_payment_id"`
-	InvoiceID           int         `json:"invoice_id"`
-	InvoicePublicID     string      `json:"invoice_public_id"`
-	UserID              int         `json:"user_id"`
-	PaysysID            string      `json:"paysys_id"`
-	ReceiptID           string      `json:"receipt_id"`
-	TransactionID       string      `json:"transaction_id"`
-	Dattm              	time.Time `json:"dattm"`
-	Currency            string      `json:"currency"`
-	Amount              float32     `json:"amount"`
-	Discount            float32     `json:"discount"`
-	Tax                 float32     `json:"tax"`
-	Shipping            float32     `json:"shipping"`
-	RefundDattm         time.Time `json:"refund_dattm"`
-	RefundAmount        float32     `json:"refund_amount"`
-	BaseCurrencyMulti   float32     `json:"base_currency_multi"`
-	DisplayInvoiceID    string      `json:"display_invoice_id"`
-	Username string `json:"username"`
-	PaymentItemDescription string `json:"payment_item_description"`
-	PaymentItemTitle string `json:"payment_item_title"`
-	Refunded bool `json:"refunded"`
-
+	ConversionTrackDone    int       `json:"conversion-track-done"`
+	GoogleAnalyticsDone    int       `json:"google-analytics-done"`
+	InvoicePaymentID       int       `json:"invoice_payment_id"`
+	InvoiceID              int       `json:"invoice_id"`
+	InvoicePublicID        string    `json:"invoice_public_id"`
+	UserID                 int       `json:"user_id"`
+	PaysysID               string    `json:"paysys_id"`
+	ReceiptID              string    `json:"receipt_id"`
+	TransactionID          string    `json:"transaction_id"`
+	Dattm                  time.Time `json:"dattm"`
+	Currency               string    `json:"currency"`
+	Amount                 float32   `json:"amount"`
+	Discount               float32   `json:"discount"`
+	Tax                    float32   `json:"tax"`
+	Shipping               float32   `json:"shipping"`
+	RefundDattm            time.Time `json:"refund_dattm"`
+	RefundAmount           float32   `json:"refund_amount"`
+	BaseCurrencyMulti      float32   `json:"base_currency_multi"`
+	DisplayInvoiceID       string    `json:"display_invoice_id"`
+	Username               string    `json:"username"`
+	PaymentItemDescription string    `json:"payment_item_description"`
+	PaymentItemTitle       string    `json:"payment_item_title"`
+	Refunded               bool      `json:"refunded"`
 }
 
 type Product struct {
@@ -270,7 +335,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		ct.Time = t
-	case "xxxx-xx-xx xx:xx:xx +xxxx" , "xxxx-xx-xx xx:xx:xx -xxxx":
+	case "xxxx-xx-xx xx:xx:xx +xxxx", "xxxx-xx-xx xx:xx:xx -xxxx":
 		t, err := time.Parse("2006-01-02 15:04:05 -0700", s)
 		if err != nil {
 			return err

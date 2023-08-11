@@ -139,14 +139,14 @@ from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
 }
 
 // UsersFromDB return a map of Users having the userID as key.
-func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Time) (map[int]User, error) {
+func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Time) (map[int]DBUser, error) {
 
 	start := time.Now()
 
-	users := make(map[int]User)
+	users := make(map[int]DBUser)
 
 	//get users from amember DB
-	usersQuery := `select user_id, login, name_f, name_l,email, added,status from am_user where status=? and added between ? and ?`
+	usersQuery := `select user_id, login, name_f, name_l,email,status,added from am_user where status=? and added between ? and ?`
 
 	rows, err := am.DB.Query(usersQuery, status, addedFrom, addedTo)
 	if err != nil {
@@ -155,8 +155,8 @@ func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Tim
 
 	for rows.Next() {
 
-		user := User{}
-		err := rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Email, &user.Added, &user.Status)
+		user := DBUser{}
+		err := rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Email, &user.Status, &user.Added)
 		if err != nil {
 			return users, err
 		}
@@ -169,24 +169,25 @@ func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Tim
 }
 
 // UsersFromDB return a map of Users having the userID as key.
-func (am *Amember) AccessesFromDB(expiredFrom time.Time, expiredTo time.Time) (map[int][]Access, error) {
+func (am *Amember) AccessesFromDB(expiredFrom time.Time, expiredTo time.Time) (map[int][]DBAccess, error) {
 
 	start := time.Now()
 
-	accesses := make(map[int][]Access)
+	accesses := make(map[int][]DBAccess)
 
 	//get users from amember DB
-	query := `select access_id,
-	invoice_public_id,
-	invoice_payment_id,
-	invoice_item_id,
-	user_id,
-	product_id,
-	transaction_id,
+	query := `select coalesce(access_id,0) as access_id,
+	coalesce(invoice_id,0) as invoice_id,
+	coalesce(invoice_public_id,0) as invoice_public_id,
+	coalesce(invoice_payment_id,0) as invoice_payment_id,
+	coalesce(invoice_item_id,0) as invoice_item_id,
+	coalesce(user_id,0) as user_id,
+	coalesce(product_id,0) as product_id,
+	coalesce(transaction_id,0) as transaction_id,
 	begin_date,
 	expire_date,
-	qty,
-	comment
+	coalesce(qty,0) as qty,
+	coalesce(comment,"") as comment
 from am_access where expire_date between ? and ?`
 	rows, err := am.DB.Query(query, expiredFrom, expiredTo)
 	if err != nil {
@@ -195,8 +196,8 @@ from am_access where expire_date between ? and ?`
 
 	for rows.Next() {
 
-		access := Access{}
-		err := rows.Scan(&access.AccessID, &access.InvoicePublicID, &access.InvoicePaymentID, &access.InvoiceItemID, &access.UserID,
+		access := DBAccess{}
+		err := rows.Scan(&access.AccessID, &access.InvoiceID, &access.InvoicePublicID, &access.InvoicePaymentID, &access.InvoiceItemID, &access.UserID,
 			&access.ProductID, &access.TransactionID, &access.BeginDate, &access.ExpireDate, &access.Qty, &access.Comment)
 		if err != nil {
 			return accesses, err
