@@ -138,68 +138,71 @@ from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
 	return memberships, nil
 }
 
-// Memberships return a map of Membership having username as key.
-// If activeAccessOnly=true only accesses that have not expired yet will be attached to memberships
-func (am *Amember) UsersFromDB() (map[string]Membership, error) {
+// UsersFromDB return a map of Users having the userID as key.
+func (am *Amember) UsersFromDB(status int, addedFrom string, addedTo string) (map[int]User, error) {
 
 	start := time.Now()
-	memberships := make(map[string]Membership)
 
 	users := make(map[int]User)
-	accesses := make(map[int][]Access)
 
 	//get users from amember DB
-	usersQuery := `select user_id, login as username from am_user where status in
-	(1,2) and user_id in (select user_id from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY))`
+	usersQuery := `select user_id, login, name_f, name_l,email, added,status from am_user where status=? and added between ? and ?`
 
-	rows, err := am.DB.Query(usersQuery)
+	rows, err := am.DB.Query(usersQuery, status, addedFrom, addedTo)
 	if err != nil {
-		return memberships, err
+		return users, err
 	}
 
 	for rows.Next() {
 
 		user := User{}
-		rows.Scan(&user.UserID, &user.Login)
+		rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Added, &user.Email, &user.Status)
 
 		users[user.UserID] = user
 	}
 
-	//get access from amember DB
-	accessQuery := `select access_id,
-	invoice_id,
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] users in [%f] seconds", len(users), time.Since(start).Seconds()), golog.DEBUG)
+
+	return users, nil
+}
+
+// UsersFromDB return a map of Users having the userID as key.
+func (am *Amember) AccessesFromDB(expiredFrom string, expiredTo string) (map[int][]Access, error) {
+
+	start := time.Now()
+
+	accesses := make(map[int][]Access)
+
+	//get users from amember DB
+	query := `select access_id,
+	invoice_public_id,
+	invoice_payment_id,
+	invoice_item_id,
 	user_id,
 	product_id,
+	transaction_id,
 	begin_date,
-	expire_date
-from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
-
-	rows, err = am.DB.Query(accessQuery)
+	expire_date,
+	qty,
+	comment
+from am_access where expire_date between ? and ?`
+	rows, err := am.DB.Query(query, expiredFrom, expiredTo)
 	if err != nil {
-		return memberships, err
+		return accesses, err
 	}
 
 	for rows.Next() {
 
 		access := Access{}
-		rows.Scan(&access.AccessID, &access.InvoiceID, &access.UserID, &access.ProductID, &access.BeginDate, &access.ExpireDate)
+		rows.Scan(&access.AccessID, &access.InvoicePublicID, &access.InvoicePaymentID, &access.InvoiceItemID, &access.UserID,
+			&access.ProductID, &access.TransactionID, &access.BeginDate, &access.ExpireDate, &access.Qty, &access.Comment)
 
 		accesses[access.UserID] = append(accesses[access.UserID], access)
 	}
 
-	//build memberships from users and access records
-	for userID, user := range users {
+	am.Gologger.Log(fmt.Sprintf("Returned [%d] accesses in [%f] seconds", len(accesses), time.Since(start).Seconds()), golog.DEBUG)
 
-		membership := Membership{}
-		membership.User = user
-		membership.Accesses = accesses[userID]
-
-		memberships[user.Login] = membership
-	}
-
-	am.Gologger.Log(fmt.Sprintf("Returned [%d] memberships in [%f] seconds", len(memberships), time.Since(start).Seconds()), golog.DEBUG)
-
-	return memberships, nil
+	return accesses, nil
 }
 
 // Users returns a map of User having username as key
