@@ -156,8 +156,10 @@ func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Tim
 	for rows.Next() {
 
 		user := User{}
-		rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Email, &user.Added, &user.Status)
-
+		err := rows.Scan(&user.UserID, &user.Login, &user.NameF, &user.NameL, &user.Email, &user.Added, &user.Status)
+		if err != nil {
+			return users, err
+		}
 		users[user.UserID] = user
 	}
 
@@ -194,8 +196,11 @@ from am_access where expire_date between ? and ?`
 	for rows.Next() {
 
 		access := Access{}
-		rows.Scan(&access.AccessID, &access.InvoicePublicID, &access.InvoicePaymentID, &access.InvoiceItemID, &access.UserID,
+		err := rows.Scan(&access.AccessID, &access.InvoicePublicID, &access.InvoicePaymentID, &access.InvoiceItemID, &access.UserID,
 			&access.ProductID, &access.TransactionID, &access.BeginDate, &access.ExpireDate, &access.Qty, &access.Comment)
+		if err != nil {
+			return accesses, err
+		}
 
 		accesses[access.UserID] = append(accesses[access.UserID], access)
 	}
