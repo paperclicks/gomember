@@ -139,7 +139,7 @@ from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
 }
 
 // UsersFromDB return a map of Users having the userID as key.
-func (am *Amember) UsersFromDB(status int, addedFrom string, addedTo string) (map[int]User, error) {
+func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Time) (map[int]User, error) {
 
 	start := time.Now()
 
@@ -167,7 +167,7 @@ func (am *Amember) UsersFromDB(status int, addedFrom string, addedTo string) (ma
 }
 
 // UsersFromDB return a map of Users having the userID as key.
-func (am *Amember) AccessesFromDB(expiredFrom string, expiredTo string) (map[int][]Access, error) {
+func (am *Amember) AccessesFromDB(expiredFrom time.Time, expiredTo time.Time) (map[int][]Access, error) {
 
 	start := time.Now()
 
