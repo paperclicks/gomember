@@ -56,6 +56,28 @@ type DBUser struct {
 	ExpiredAt      sql.NullTime `json:"expired_at"`
 }
 
+type ViewUser struct {
+	UserID                  int          `json:"userId"`
+	Username                string       `json:"username"`
+	FirstName               string       `json:"first_name"`
+	LastName                string       `json:"last_name"`
+	Email                   string       `json:"email"`
+	SignupDate              sql.NullTime `json:"signup_date"`
+	SubscriptionStatus      string       `json:"subscriptionStatus"`
+	ClickID                 string       `json:"click_id"`
+	MobilePhone             string       `json:"mobile_phone"`
+	SubscriptionPlan        string       `json:"subscription_plan"`
+	ProductName             string       `json:"product_name"`
+	ExpirationDate          sql.NullTime `json:"expiration_date"`
+	TotalMonths             int          `json:"total_months"`
+	TotalDays               int          `json:"total_days"`
+	TotalDaysExcludingTrial int          `json:"total_days_excluding_trial"`
+	TotalPayments           float32      `json:"total_payments"`
+	FirstPayment            sql.NullTime `json:"first_payment"`
+	LastPayment             sql.NullTime `json:"last_payment"`
+	HowDidYouHear           string       `json:"how_did_you_hear"`
+}
+
 type User struct {
 	Added              CustomTime  `json:"added"`
 	AffAdded           interface{} `json:"aff_added"`

@@ -169,6 +169,52 @@ func (am *Amember) UsersFromDB(status int, addedFrom time.Time, addedTo time.Tim
 }
 
 // UsersFromDB return a map of Users having the userID as key.
+func (am *Amember) GetUserFromView(email string) (ViewUser, error) {
+
+	user := ViewUser{}
+
+	//get users from amember DB
+	usersQuery := `select userId,
+	username,
+	first_name,
+	last_name,
+	email,
+	signup_date,
+	subscriptionStatus,
+	click_id,
+	mobile_phone,
+	subscription_plan,
+	product_name,
+	expiration_date,
+	total_months,
+	total_days,
+	total_days_excluding_trial,
+	total_payments,
+	first_payment,
+	last_payment,
+	how_did_you_hear
+from users where email=?`
+
+	rows, err := am.DB.Query(usersQuery, email)
+	if err != nil {
+		return user, err
+	}
+
+	for rows.Next() {
+
+		err := rows.Scan(&user.UserID, &user.Username, &user.FirstName, &user.LastName,
+			&user.Email, &user.SignupDate, &user.SubscriptionStatus, &user.ClickID, &user.MobilePhone, &user.SubscriptionPlan,
+			&user.ProductName, &user.ExpirationDate, &user.TotalMonths, &user.TotalDays, &user.TotalDaysExcludingTrial,
+			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear)
+		if err != nil {
+			return user, err
+		}
+	}
+
+	return user, nil
+}
+
+// UsersFromDB return a map of Users having the userID as key.
 func (am *Amember) AccessesFromDB(expiredFrom time.Time, expiredTo time.Time) (map[int][]DBAccess, error) {
 
 	start := time.Now()
@@ -188,8 +234,8 @@ func (am *Amember) AccessesFromDB(expiredFrom time.Time, expiredTo time.Time) (m
 	expire_date,
 	coalesce(qty,0) as qty,
 	coalesce(comment,"") as comment
-from am_access where expire_date between ? and ?`
-	rows, err := am.DB.Query(query, expiredFrom, expiredTo)
+from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)?`
+	rows, err := am.DB.Query(query)
 	if err != nil {
 		return accesses, err
 	}
