@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -29,6 +30,13 @@ type Params struct {
 	Nested []string
 	Count  int
 	Page   int
+}
+
+type Condition struct {
+	Column   string
+	Operator string
+	Values   []interface{}
+	SubQuery string
 }
 
 func New(apiURL string, apiKey string, gl *golog.Golog) *Amember {
@@ -1120,4 +1128,139 @@ func (am *Amember) RefundsByDate(datetime time.Time, itemTitle string) (map[stri
 
 	}
 	return paymets, nil
+}
+
+// UsersFromDB return a map of Users having the userID as key.
+func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUser, error) {
+
+	users := []ViewUser{}
+
+	whereConditions, conditionValues := BuildWhereConditions(conditions, 10000)
+
+	//get users from amember DB
+	usersQuery := fmt.Sprintf(`select userId,
+	username,
+	first_name,
+	last_name,
+	email,
+	signup_date,
+	subscriptionStatus,
+	click_id,
+	mobile_phone,
+	subscription_plan,
+	product_name,
+	expiration_date,
+	total_months,
+	total_days,
+	total_days_excluding_trial,
+	total_payments,
+	first_payment,
+	last_payment,
+	how_did_you_hear
+from users %s`, whereConditions)
+
+	rows, err := am.DB.Query(usersQuery, conditionValues...)
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+
+		user := ViewUser{}
+		err := rows.Scan(&user.UserID, &user.Username, &user.FirstName, &user.LastName,
+			&user.Email, &user.SignupDate, &user.SubscriptionStatus, &user.ClickID, &user.MobilePhone, &user.SubscriptionPlan,
+			&user.ProductName, &user.ExpirationDate, &user.TotalMonths, &user.TotalDays, &user.TotalDaysExcludingTrial,
+			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear)
+		if err != nil {
+			panic(err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// SelectQuery gets in input a Model and a slice of Condition, and returns a parametrized query and a slice of values to pass to the Exec method
+func BuildWhereConditions(conditions []Condition, limit int) (string, []interface{}) {
+
+	//whereConditions is a slice with already formated pieces of conditions
+	//these conditions will be finally joined with "AND" operator
+	whereConditions := []string{}
+
+	//keeps track of the total number of params in the final query
+	paramsIndex := 1
+
+	values := []interface{}{}
+
+	limitCondition := ""
+
+	if limit > 0 {
+		limitCondition = fmt.Sprintf("LIMIT %d", limit)
+	}
+
+	//if conditions are empty return a query without where conditions, and empty values
+	if len(conditions) == 0 {
+		q := fmt.Sprintf("WHERE ? %s", limitCondition)
+
+		values = append(values, true)
+
+		return q, values
+	}
+
+	//for each element in the conditions map
+	//check if the lenght of the values for the condition
+	//if there is only 1 value then it is a simple operator (=,=>, <=, !=)
+	//if the length is 2 or higher it might be one of IN, BETWEEN operators
+	for _, v := range conditions {
+
+		switch v.Operator {
+		case "IN":
+
+			//if a subquery was passed for the IN condition the simply append "column IN (subquery)"
+			if v.SubQuery != "" {
+
+				whereConditions = append(whereConditions, fmt.Sprintf("%s IN (%s)", v.Column, v.SubQuery))
+				break
+			}
+
+			params := []string{}
+			//add a list of params for the IN condition in the form of $1, $2, $3...
+			for _, val := range v.Values {
+
+				params = append(params, "?")
+				values = append(values, val)
+				paramsIndex++
+			}
+			//append "column IN ($1, $2, $3,...)"
+			whereConditions = append(whereConditions, fmt.Sprintf("%s %s (%s)", v.Column, v.Operator, strings.Join(params, ",")))
+
+		case "BETWEEN":
+
+			//append "column BETWEEN $1 AND $2"
+			whereConditions = append(whereConditions, fmt.Sprintf("%s %s $? AND ?", v.Column, v.Operator))
+
+			values = append(values, v.Values[0])
+			values = append(values, v.Values[1])
+
+			//increase index by 2 because 2 values were used here
+			paramsIndex = paramsIndex + 2
+
+		case "=", ">", "<", "<=", ">=", "<>", "!=":
+
+			whereConditions = append(whereConditions, fmt.Sprintf("%s %s ?", v.Column, v.Operator))
+
+			values = append(values, v.Values[0])
+
+			paramsIndex++
+
+		default:
+			fmt.Printf("Missing or unknown operator: %s\n", v.Operator)
+		}
+
+	}
+
+	q := fmt.Sprintf("WHERE %s %s", strings.Join(whereConditions, " AND "), limitCondition)
+
+	return q, values
 }
