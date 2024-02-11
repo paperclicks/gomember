@@ -111,7 +111,7 @@ func (am *Amember) MembershipsFromDB() (map[string]Membership, error) {
 
 	//get access from amember DB
 	accessQuery := `select access_id,
-	invoice_id,
+	coalesce(invoice_id,0) as invoice_id,
 	user_id,
 	product_id,
 	begin_date,
@@ -126,9 +126,12 @@ from am_access where expire_date>= DATE_SUB(NOW(), INTERVAL 30 DAY)`
 	for rows.Next() {
 
 		access := Access{}
-		rows.Scan(&access.AccessID, &access.InvoiceID, &access.UserID, &access.ProductID, &access.BeginDate, &access.ExpireDate)
-
+		err := rows.Scan(&access.AccessID, &access.InvoiceID, &access.UserID, &access.ProductID, &access.BeginDate, &access.ExpireDate)
+		if err != nil {
+			return memberships, err
+		}
 		accesses[access.UserID] = append(accesses[access.UserID], access)
+
 	}
 
 	//build memberships from users and access records
