@@ -1256,6 +1256,13 @@ func BuildWhereConditions(conditions []Condition, limit int) (string, []interfac
 			values = append(values, v.Values[0])
 
 			paramsIndex++
+		case "LIKE":
+
+			whereConditions = append(whereConditions, fmt.Sprintf("%s %s ?", v.Column, v.Operator))
+
+			values = append(values, v.Values[0])
+
+			paramsIndex++
 
 		default:
 			fmt.Printf("Missing or unknown operator: %s\n", v.Operator)
