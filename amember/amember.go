@@ -1163,7 +1163,7 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	preferred_contact_method,
 	preferred_contact,
 	COALESCE(payments_last_3_months,0) as payments_last_3_months,
-	is_top_paying_user
+	COALESCE(is_top_paying_user,"no") as is_top_paying_user
 from users %s`, whereConditions)
 
 	rows, err := am.DB.Query(usersQuery, conditionValues...)
