@@ -1162,7 +1162,7 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	how_did_you_hear,
 	preferred_contact_method,
 	preferred_contact,
-	payments_last_3_months,
+	COALESCE(payments_last_3_months,0) as payments_last_3_months,
 	is_top_paying_user
 from users %s`, whereConditions)
 
