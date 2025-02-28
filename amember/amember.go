@@ -1157,7 +1157,7 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	total_days,
 	total_days_excluding_trial,
 	coalesce(total_payments,0) as total_payments,
-	coalesce(first_payment,'1970-01-01 00:00:01') as first_payment
+	coalesce(first_payment,'1970-01-01 00:00:01') as first_payment,
 	coalesce(last_payment,'1970-01-01 00:00:01') as last_payment,
 	how_did_you_hear,
 	coalesce(preferred_contact_method,'not_specified') as preferred_contact_method ,
