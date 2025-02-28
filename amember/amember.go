@@ -1177,8 +1177,8 @@ from users %s`, whereConditions)
 		err := rows.Scan(&user.UserID, &user.Username, &user.FirstName, &user.LastName,
 			&user.Email, &user.SignupDate, &user.SubscriptionStatus, &user.ClickID, &user.MobilePhone, &user.SubscriptionPlan,
 			&user.ProductName, &user.ExpirationDate, &user.TotalMonths, &user.TotalDays, &user.TotalDaysExcludingTrial,
-			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear, &user.PreferredContactMethod, &user.PreferredContact
-		&user.PaymentsLast3Months,&user.IsTopPayingUser)
+			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear, &user.PreferredContactMethod, &user.PreferredContact,
+			&user.PaymentsLast3Months, &user.IsTopPayingUser)
 		if err != nil {
 			panic(err)
 		}
