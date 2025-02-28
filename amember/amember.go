@@ -1161,7 +1161,9 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	last_payment,
 	how_did_you_hear,
 	preferred_contact_method,
-	preferred_contact
+	preferred_contact,
+	payments_last_3_months,
+	is_top_paying_user
 from users %s`, whereConditions)
 
 	rows, err := am.DB.Query(usersQuery, conditionValues...)
@@ -1175,7 +1177,8 @@ from users %s`, whereConditions)
 		err := rows.Scan(&user.UserID, &user.Username, &user.FirstName, &user.LastName,
 			&user.Email, &user.SignupDate, &user.SubscriptionStatus, &user.ClickID, &user.MobilePhone, &user.SubscriptionPlan,
 			&user.ProductName, &user.ExpirationDate, &user.TotalMonths, &user.TotalDays, &user.TotalDaysExcludingTrial,
-			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear, &user.PreferredContactMethod, &user.PreferredContact)
+			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear, &user.PreferredContactMethod, &user.PreferredContact
+		&user.PaymentsLast3Months,&user.IsTopPayingUser)
 		if err != nil {
 			panic(err)
 		}

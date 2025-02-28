@@ -78,6 +78,8 @@ type ViewUser struct {
 	HowDidYouHear           string       `json:"how_did_you_hear"`
 	PreferredContactMethod  string       `json:"preferred_contact_method"`
 	PreferredContact        string       `json:"preferred_contact"`
+	PaymentsLast3Months     float32      `json:"payments_last_3_months"`
+	IsTopPayingUser         string       `json:"is_top_paying_user"`
 }
 
 type User struct {
