@@ -76,6 +76,8 @@ type ViewUser struct {
 	FirstPayment            sql.NullTime `json:"first_payment"`
 	LastPayment             sql.NullTime `json:"last_payment"`
 	HowDidYouHear           string       `json:"how_did_you_hear"`
+	PreferredContactMethod  string       `json:"preferred_contact_method"`
+	PreferredContact        string       `json:"preferred_contact"`
 }
 
 type User struct {
