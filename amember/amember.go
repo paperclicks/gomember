@@ -1166,6 +1166,7 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	COALESCE(is_top_paying_user,"no") as is_top_paying_user
 from users %s`, whereConditions)
 
+	//test
 	rows, err := am.DB.Query(usersQuery, conditionValues...)
 	if err != nil {
 		panic(err)
