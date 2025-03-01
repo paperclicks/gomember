@@ -1164,7 +1164,8 @@ func (am *Amember) GetUsersFromView(conditions []Condition, limit int) ([]ViewUs
 	coalesce(preferred_contact,'not_specified') as preferred_contact,
 	payments_last_3_months,
 	is_top_paying_user,
-	cancellation_date
+	cancellation_date,
+	last_updated
 from users %s`, whereConditions)
 
 	//test
@@ -1180,7 +1181,7 @@ from users %s`, whereConditions)
 			&user.Email, &user.SignupDate, &user.SubscriptionStatus, &user.ClickID, &user.MobilePhone, &user.SubscriptionPlan,
 			&user.ProductName, &user.ExpirationDate, &user.TotalMonths, &user.TotalDays, &user.TotalDaysExcludingTrial,
 			&user.TotalPayments, &user.FirstPayment, &user.LastPayment, &user.HowDidYouHear, &user.PreferredContactMethod, &user.PreferredContact,
-			&user.PaymentsLast3Months, &user.IsTopPayingUser, &user.CancellationDate)
+			&user.PaymentsLast3Months, &user.IsTopPayingUser, &user.CancellationDate, &user.LastUpdated)
 		if err != nil {
 			panic(err)
 		}

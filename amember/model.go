@@ -81,6 +81,7 @@ type ViewUser struct {
 	PaymentsLast3Months     float32      `json:"payments_last_3_months"`
 	IsTopPayingUser         string       `json:"is_top_paying_user"`
 	CancellationDate        sql.NullTime `json:"cancellation_date"`
+	LastUpdated             sql.NullTime `json:"last_updated"`
 }
 
 type User struct {
