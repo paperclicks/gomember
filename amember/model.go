@@ -80,6 +80,7 @@ type ViewUser struct {
 	PreferredContact        string       `json:"preferred_contact"`
 	PaymentsLast3Months     float32      `json:"payments_last_3_months"`
 	IsTopPayingUser         string       `json:"is_top_paying_user"`
+	CancellationDate        sql.NullTime `json:"cancellation_date"`
 }
 
 type User struct {
